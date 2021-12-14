@@ -1,115 +1,309 @@
 import 'package:flutter/material.dart';
+import 'package:vrouter/vrouter.dart';
+import 'package:vrouter_x/vrouter_x.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({
+    Key? key,
+  }) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    return VRouter(
+      debugShowCheckedModeBanner: false,
+      // initialUrl: '/profile',
+      routes: [
+        VxTabsScaffold(
+          path: '/',
+          tabsRoutes: [
+            PathInfo(
+              path:
+                  null, // Null makes it the path of the parent "/", which is the initial route
+              buildRoute: (path) => VWidget(
+                path: path,
+                key: const ValueKey(
+                    'Home'), //I think it's for the indexed stack to work well ?
+                widget: const HomeScreen(),
+                stackedRoutes: [
+                  VxTabBar(
+                    path: '/', // must be absolute
+                    tabsRoutes: [
+                      TabPathInfo(
+                        path: 'red',
+                        buildRoute: (path, aliases) => VWidget(
+                          path: path,
+                          key: const ValueKey('Red'),
+                          // We use a key to indicate that path and alias lead to the same screen
+                          aliases: aliases,
+                          widget: ColorScreen(
+                            color: Colors.redAccent,
+                            title: 'Red',
+                            extraWidget: (context) => ElevatedButton(
+                              onPressed: () {
+                                context.vRouter.to('plus');
+                              },
+                              child: const Text('Plus'),
+                            ),
+                          ),
+                        ),
+                      ),
+                      TabPathInfo(
+                        path: 'green',
+                        buildRoute: (path, aliases) => VWidget(
+                            path: path,
+                            key: const ValueKey('Green'),
+                            // We use a key to indicate that path and alias lead to the same screen
+                            aliases: aliases,
+                            widget: ColorScreen(
+                              color: Colors.green,
+                              title: 'Green',
+                              extraWidget: (context) => Column(
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      context.vRouter.to('light-green');
+                                    },
+                                    child: const Text('Light Green'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      context.vRouter.to('plus');
+                                    },
+                                    child: const Text('Plus'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            stackedRoutes: [
+                              VWidget(
+                                  path: 'light-green',
+                                  widget: ColorScreen(
+                                    color: Colors.lightGreen.shade200,
+                                    title: 'Light Green',
+                                    extraWidget: (context) => ElevatedButton(
+                                      onPressed: () {
+                                        context.vRouter.to('/green/plus');
+                                      },
+                                      child: const Text('Plus'),
+                                    ),
+                                  ))
+                            ]),
+                      ),
+                      TabPathInfo(
+                        path: 'yellow',
+                        buildRoute: (path, aliases) => VWidget(
+                          path: path,
+                          key: const ValueKey('Yellow'),
+                          // We use a key to indicate that path and alias lead to the same screen
+                          aliases: aliases,
+                          widget: ColorScreen(
+                            color: Colors.yellow,
+                            title: 'Yellow',
+                            extraWidget: (context) => ElevatedButton(
+                              onPressed: () {
+                                context.vRouter.to('plus');
+                              },
+                              child: const Text('Plus'),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    stackedRoutes: (parentPath) => [
+                      PathInfo(
+                        path: '$parentPath/plus',
+                        buildRoute: (path) => VWidget.builder(
+                          path: path,
+                          builder: (context, state) => const ColorScreen(
+                            color: Colors.pink,
+                            title: 'Plus',
+                          ),
+                        ),
+                      ),
+                    ],
+                    tabBarViewBuilder: (context, tabController, children) =>
+                        TabBarView(
+                            controller: tabController, children: children),
+                  ),
+                ],
+              ),
+            ),
+            PathInfo(
+              path: 'profile',
+              buildRoute: (path) => VWidget(
+                path: path,
+                widget: const ProfileScreen(),
+                stackedRoutes: [
+                  VWidget(path: 'settings', widget: const SettingsScreen())
+                ],
+              ),
+            )
+          ],
+          stackedRoutes: [
+            PathInfo(
+              path: 'purple',
+              buildRoute: (path) => VWidget(
+                path: path,
+                // key: const ValueKey('Purple'),
+                widget:
+                    const ColorScreen(color: Colors.purple, title: 'Purple'),
+              ),
+            )
+          ],
+          tabsScaffoldBuilder: (context, body, currentIndex, onTabPressed) =>
+              Scaffold(
+            body: body,
+            floatingActionButton: FloatingActionButton(
+              onPressed: () => context.vRouter.to('/purple'),
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: currentIndex,
+              onTap: onTabPressed,
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.settings), label: 'Profile'),
+              ],
+            ),
+          ),
+          stackedScaffoldBuilder: (context, body) => Scaffold(body: body),
+        )
+      ],
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
+class BaseWidget extends StatefulWidget {
   final String title;
+  final String buttonText;
+  final String to;
+
+  const BaseWidget({
+    Key? key,
+    required this.title,
+    required this.buttonText,
+    required this.to,
+  }) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _BaseWidgetState createState() => _BaseWidgetState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class _BaseWidgetState extends State<BaseWidget> {
+  bool isChecked = false;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+    return Material(
+      child: Center(
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(widget.title),
+            const SizedBox(height: 50),
+            ElevatedButton(
+              onPressed: () => context.vRouter.to(widget.to),
+              child: Text(widget.buttonText),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+            const SizedBox(height: 50),
+            Checkbox(
+              value: isChecked,
+              onChanged: (value) => setState(() => isChecked = value ?? false),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return const BaseWidget(
+        title: 'Home', buttonText: 'Go to Color Tabs', to: '/red');
+  }
+}
+
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return const BaseWidget(
+        title: 'Settings', buttonText: 'Pop', to: '/profile');
+  }
+}
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return const BaseWidget(
+        title: 'Profile',
+        buttonText: 'Go to Settings',
+        to: '/profile/settings');
+  }
+}
+
+class ColorScreen extends StatefulWidget {
+  const ColorScreen({
+    Key? key,
+    required this.color,
+    required this.title,
+    this.extraWidget,
+  }) : super(key: key);
+
+  final Color color;
+  final String title;
+  final Widget Function(BuildContext context)? extraWidget;
+
+  @override
+  _ColorScreenState createState() => _ColorScreenState();
+}
+
+class _ColorScreenState extends State<ColorScreen>
+    with AutomaticKeepAliveClientMixin<ColorScreen> {
+  bool isChecked = false;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    final extraWidget = widget.extraWidget;
+
+    return Container(
+      color: widget.color,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(widget.title),
+            const SizedBox(height: 50),
+            ElevatedButton(
+              onPressed: () => context.vRouter.pop(),
+              child: const Text('Pop'),
+            ),
+            const SizedBox(height: 50),
+            Checkbox(
+              value: isChecked,
+              onChanged: (value) => setState(() => isChecked = value ?? false),
+            ),
+            if (extraWidget != null) const SizedBox(height: 50),
+            if (extraWidget != null) extraWidget(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }

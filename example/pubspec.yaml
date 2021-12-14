@@ -11,8 +11,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   cupertino_icons: ^1.0.2
+  vrouter_x:
+    git:
+      url: https://github.com/ojm-it/vrouter_x.git
+      ref: master
 
 dev_dependencies:
   flutter_test:
