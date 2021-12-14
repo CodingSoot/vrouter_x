@@ -63,7 +63,7 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_hooks:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_hooks
       url: "https://pub.dartlang.org"
@@ -271,7 +271,7 @@ packages:
     description:
       path: "."
       ref: master
-      resolved-ref: ecb75f29e48574d5906a6c42bb2abc82bee920fb
+      resolved-ref: "6c204cb277b48d6e709cbae5d7a546080f1e3dc4"
       url: "https://github.com/ojm-it/vrouter_x.git"
     source: git
     version: "0.0.1"

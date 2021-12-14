@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:vrouter/vrouter.dart';
 import 'package:vrouter_x/vrouter_x.dart';
 
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
       // initialUrl: '/profile',
       routes: [
         VxTabsScaffold(
-          path: '/',
+          path: '/', // must be absolute
           tabsRoutes: [
             PathInfo(
               path:
@@ -253,7 +254,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-class ColorScreen extends StatefulWidget {
+class ColorScreen extends HookWidget {
   const ColorScreen({
     Key? key,
     required this.color,
@@ -266,26 +267,22 @@ class ColorScreen extends StatefulWidget {
   final Widget Function(BuildContext context)? extraWidget;
 
   @override
-  _ColorScreenState createState() => _ColorScreenState();
-}
-
-class _ColorScreenState extends State<ColorScreen>
-    with AutomaticKeepAliveClientMixin<ColorScreen> {
-  bool isChecked = false;
-
-  @override
   Widget build(BuildContext context) {
-    super.build(context);
+    //for type promotion
+    final extraWidget = this.extraWidget;
 
-    final extraWidget = widget.extraWidget;
+    /// This is so that the state of the tabs inside the [TabBarView] is kept.
+    useAutomaticKeepAlive();
+
+    final isChecked = useState(false);
 
     return Container(
-      color: widget.color,
+      color: color,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(widget.title),
+            Text(title),
             const SizedBox(height: 50),
             ElevatedButton(
               onPressed: () => context.vRouter.pop(),
@@ -293,8 +290,8 @@ class _ColorScreenState extends State<ColorScreen>
             ),
             const SizedBox(height: 50),
             Checkbox(
-              value: isChecked,
-              onChanged: (value) => setState(() => isChecked = value ?? false),
+              value: isChecked.value,
+              onChanged: (value) => isChecked.value = value ?? false,
             ),
             if (extraWidget != null) const SizedBox(height: 50),
             if (extraWidget != null) extraWidget(context),
@@ -303,7 +300,4 @@ class _ColorScreenState extends State<ColorScreen>
       ),
     );
   }
-
-  @override
-  bool get wantKeepAlive => true;
 }
