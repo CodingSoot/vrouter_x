@@ -15,13 +15,13 @@ import 'helpers/path_info.dart';
 /// - Seamless integration with Flutter's BottomNavigationBar or your own custom NavigationBar
 /// - Possibility to stack routes on top of the BottomNavigationBar.
 ///
-class VTabsScaffold extends VRouteElementBuilder {
-  VTabsScaffold({
+class VxTabsScaffold extends VRouteElementBuilder {
+  VxTabsScaffold({
     required this.path,
     required this.tabsRoutes,
     this.stackedRoutes,
     required this.tabsScaffoldBuilder,
-    this.stackedScaffoldBuilder = VTabsScaffold.defaultStackedScaffoldBuilder,
+    this.stackedScaffoldBuilder = VxTabsScaffold.defaultStackedScaffoldBuilder,
   }) : assert(path.startsWith('/'),
             "The path of the VTabsScaffold must be absolute");
 
@@ -77,7 +77,7 @@ class VTabsScaffold extends VRouteElementBuilder {
 
   /// Builder method for the scaffold of the [stackedRoutes]
   ///
-  /// Defaults to [VTabsScaffold.defaultStackedScaffoldBuilder]
+  /// Defaults to [VxTabsScaffold.defaultStackedScaffoldBuilder]
   final Scaffold Function(BuildContext context, Widget body)
       stackedScaffoldBuilder;
 
@@ -151,10 +151,10 @@ class TabsScaffoldWidget extends HookWidget {
 
   static const stackedScaffoldIndex = -1;
 
-  /// The path of the [VTabsScaffold], which is an absolute path.
+  /// The path of the [VxTabsScaffold], which is an absolute path.
   final String rootPath;
 
-  /// The paths of the tabs of the [VTabsScaffold].
+  /// The paths of the tabs of the [VxTabsScaffold].
   final List<String?> tabsPaths;
 
   final Widget child;
