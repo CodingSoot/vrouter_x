@@ -178,7 +178,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class BaseWidget extends StatefulWidget {
+class BaseWidget extends HookWidget {
   final String title;
   final String buttonText;
   final String to;
@@ -191,29 +191,24 @@ class BaseWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _BaseWidgetState createState() => _BaseWidgetState();
-}
-
-class _BaseWidgetState extends State<BaseWidget> {
-  bool isChecked = false;
-
-  @override
   Widget build(BuildContext context) {
+    final isChecked = useState(false);
+
     return Material(
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(widget.title),
+            Text(title),
             const SizedBox(height: 50),
             ElevatedButton(
-              onPressed: () => context.vRouter.to(widget.to),
-              child: Text(widget.buttonText),
+              onPressed: () => context.vRouter.to(to),
+              child: Text(buttonText),
             ),
             const SizedBox(height: 50),
             Checkbox(
-              value: isChecked,
-              onChanged: (value) => setState(() => isChecked = value ?? false),
+              value: isChecked.value,
+              onChanged: (value) => isChecked.value = value ?? false,
             ),
           ],
         ),
