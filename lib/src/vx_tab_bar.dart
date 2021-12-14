@@ -6,15 +6,22 @@ import 'package:vrouter_x/src/helpers/path_info.dart';
 import 'package:vrouter_x/src/helpers/tab_path_info.dart';
 import 'package:vrouter_x/src/helpers/vx_tab.dart';
 
-/// A [VRouteElement] that allows you to easily setup a [BottomNavigationBar]
-/// or your own [NavigationBar].
+/// A [VRouteElement] that allows you to easily setup a [TabBarView] where each
+/// tab is a different router with its own stack.
 ///
 /// It implements several features including :
-/// - Preserved state for each tab
+/// - Preserved state for each tab (Optional, should use
+///   [AutomaticKeepAliveClientMixin])
 /// - Lazily loaded tabs
-/// - Seamless integration with Flutter's BottomNavigationBar or your own custom NavigationBar
-/// - Possibility to stack routes on top of the BottomNavigationBar.
+/// - Seamless integration with Flutter's [TabBarView]
+/// - Possibility to stack routes on top of the whole [TabBarView]
 ///
+/// NB :
+///  - Each tabRoute should indicate a key to indicate that path and alias lead
+///    to the same screen, so that the state and animations are correct when
+///    going from a stackedRoute to a tabRoute.
+///  - The widget of each tab route should mixin [AutomaticKeepAliveClientMixin]
+///    if you want to keep the state.
 class VxTabBar extends VRouteElementBuilder {
   VxTabBar({
     required this.path,
