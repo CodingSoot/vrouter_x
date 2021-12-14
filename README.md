@@ -18,7 +18,36 @@ Inspired by [this example.](https://github.com/lulupointu/vrouter/issues/32#issu
 # Features
 
 - VxTabsScaffold
-- VxTabBar
+- VxTabBar :
+  - `useAutomaticKeepAlive` hook is provided for easily keeping the state of the tabs.
+
+If you don't want to use the hook, you'll have to manually mixin `AutomaticKeepAliveClientMixin` for your tabs' widgets.
+
+```dart
+class MyTab extends StatefulWidget {
+  const MyTab({ Key? key }) : super(key: key);
+
+  @override
+  _MyTabState createState() => _MyTabState();
+}
+
+/// 1. Mixin [AutomaticKeepAliveClientMixin]
+class _MyTabState extends State<MyTab> with AutomaticKeepAliveClientMixin<MyTab> {
+  
+  @override
+  Widget build(BuildContext context) {
+    /// 2. Call super.build(context);
+    super.build(context);
+
+    return ...
+  }
+
+  /// 3. Override [wantKeepAlive]
+  @override
+  bool get wantKeepAlive => true;
+}
+
+```
 
 # Getting started
 
