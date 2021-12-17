@@ -72,13 +72,13 @@ class VxTabsScaffold extends VRouteElementBuilder {
   ///       ),
   ///     ),
   /// ```
-  final Scaffold Function(BuildContext context, Widget body, int currentIndex,
+  final Widget Function(BuildContext context, Widget body, int currentIndex,
       void Function(int)? onTabPressed) tabsScaffoldBuilder;
 
   /// Builder method for the scaffold of the [stackedRoutes]
   ///
   /// Defaults to [VxTabsScaffold.defaultStackedScaffoldBuilder]
-  final Scaffold Function(BuildContext context, Widget body)
+  final Widget Function(BuildContext context, Widget body)
       stackedScaffoldBuilder;
 
   ///Default builder for [stackedScaffoldBuilder]
@@ -171,10 +171,10 @@ class TabsScaffoldWidget extends HookWidget {
   /// The number of tabs
   final int tabsLength;
 
-  final Scaffold Function(BuildContext context, Widget body, int currentIndex,
+  final Widget Function(BuildContext context, Widget body, int currentIndex,
       void Function(int)? onTabPressed) tabsScaffoldBuilder;
 
-  final Scaffold Function(BuildContext context, Widget body)
+  final Widget Function(BuildContext context, Widget body)
       stackedScaffoldBuilder;
 
   List<VxTab> _generateInitialTabs() {
@@ -220,7 +220,7 @@ class TabsScaffoldWidget extends HookWidget {
   }
 
   /// The tabs scaffold
-  Scaffold _buildTabsScaffold(
+  Widget _buildTabsScaffold(
       BuildContext context, ValueNotifier<List<VxTab>> tabs) {
     return tabsScaffoldBuilder(
       context,

@@ -79,7 +79,7 @@ class VxTabBar extends VRouteElementBuilder {
   final List<PathInfo> Function(String? parentPath)? stackedRoutes;
 
   /// Builder method for the TabBarView.
-  final TabBarView Function(BuildContext context, TabController tabController,
+  final Widget Function(BuildContext context, TabController tabController,
       List<Widget> children) tabBarViewBuilder;
 
   @override
@@ -170,7 +170,7 @@ class TabBarWidget extends HookWidget {
   /// The number of tabs
   final int tabsLength;
 
-  final TabBarView Function(BuildContext context, TabController tabController,
+  final Widget Function(BuildContext context, TabController tabController,
       List<Widget> children) tabBarViewBuilder;
 
   /// We use this as the index to easily fetch the new widget when in comes into
