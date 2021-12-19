@@ -22,6 +22,7 @@ class VxTabsScaffold extends VRouteElementBuilder {
     this.stackedRoutes,
     required this.tabsScaffoldBuilder,
     this.stackedScaffoldBuilder = VxTabsScaffold.defaultStackedScaffoldBuilder,
+    this.buildWrapper,
   }) : assert(path.startsWith('/'),
             "The path of the VTabsScaffold must be absolute");
 
@@ -72,18 +73,22 @@ class VxTabsScaffold extends VRouteElementBuilder {
   ///       ),
   ///     ),
   /// ```
-  final Widget Function(BuildContext context, Widget body, int currentIndex,
-      void Function(int)? onTabPressed) tabsScaffoldBuilder;
+  final Widget Function(BuildContext context, VRouterData state, Widget body,
+      int currentIndex, void Function(int)? onTabPressed) tabsScaffoldBuilder;
+
+  /// This BuilderMethod wraps both tabsScaffoldBuilder and stackedScaffoldBuilder.
+  final Widget Function(BuildContext context, VRouterData state, Widget child)?
+      buildWrapper;
 
   /// Builder method for the scaffold of the [stackedRoutes]
   ///
   /// Defaults to [VxTabsScaffold.defaultStackedScaffoldBuilder]
-  final Widget Function(BuildContext context, Widget body)
+  final Widget Function(BuildContext context, VRouterData state, Widget body)
       stackedScaffoldBuilder;
 
   ///Default builder for [stackedScaffoldBuilder]
   static Scaffold defaultStackedScaffoldBuilder(
-          BuildContext context, Widget body) =>
+          BuildContext context, VRouterData state, Widget body) =>
       Scaffold(body: body);
 
   @override
@@ -91,10 +96,12 @@ class VxTabsScaffold extends VRouteElementBuilder {
     final tabsPaths = tabsRoutes.map((tabRoute) => tabRoute.path).toList();
 
     final tabsRouteElements = tabsRoutes.mapIndexed((index, tabRoute) {
-      return VNester(
+      return VNester.builder(
         ///TODO add other parameters in constructor
+
         path: path,
-        widgetBuilder: (child) => TabsScaffoldWidget(
+        widgetBuilder: (context, state, child) => TabsScaffoldWidget(
+          state: state,
           rootPath: path,
           tabsPaths: tabsPaths,
           child: child,
@@ -102,6 +109,7 @@ class VxTabsScaffold extends VRouteElementBuilder {
           tabsLength: tabsRoutes.length,
           stackedScaffoldBuilder: stackedScaffoldBuilder,
           tabsScaffoldBuilder: tabsScaffoldBuilder,
+          buildWrapper: buildWrapper,
         ),
         nestedRoutes: [tabRoute.build()],
       );
@@ -113,10 +121,11 @@ class VxTabsScaffold extends VRouteElementBuilder {
 
       /// The stacked routes
       if (stackedRoutes != null)
-        VNester(
+        VNester.builder(
           ///TODO add other parameters in constructor
           path: path,
-          widgetBuilder: (child) => TabsScaffoldWidget(
+          widgetBuilder: (context, state, child) => TabsScaffoldWidget(
+            state: state,
             rootPath: path,
             tabsPaths: tabsPaths,
             child: child,
@@ -124,6 +133,7 @@ class VxTabsScaffold extends VRouteElementBuilder {
             tabsLength: tabsRoutes.length,
             stackedScaffoldBuilder: stackedScaffoldBuilder,
             tabsScaffoldBuilder: tabsScaffoldBuilder,
+            buildWrapper: buildWrapper,
           ),
           nestedRoutes: stackedRoutes!.map((route) => route.build()).toList(),
         ),
@@ -134,6 +144,7 @@ class VxTabsScaffold extends VRouteElementBuilder {
 class TabsScaffoldWidget extends HookWidget {
   const TabsScaffoldWidget({
     Key? key,
+    required this.state,
     required this.rootPath,
     required this.tabsPaths,
     required this.tabsLength,
@@ -141,6 +152,7 @@ class TabsScaffoldWidget extends HookWidget {
     required this.child,
     required this.tabsScaffoldBuilder,
     required this.stackedScaffoldBuilder,
+    required this.buildWrapper,
   })  : assert(tabsPaths.length == tabsLength,
             "The tabsPaths length must equal tabsLength"),
         assert(
@@ -150,6 +162,8 @@ class TabsScaffoldWidget extends HookWidget {
         super(key: key);
 
   static const stackedScaffoldIndex = -1;
+
+  final VRouterData state;
 
   /// The path of the [VxTabsScaffold], which is an absolute path.
   final String rootPath;
@@ -171,11 +185,15 @@ class TabsScaffoldWidget extends HookWidget {
   /// The number of tabs
   final int tabsLength;
 
-  final Widget Function(BuildContext context, Widget body, int currentIndex,
-      void Function(int)? onTabPressed) tabsScaffoldBuilder;
+  final Widget Function(BuildContext context, VRouterData state, Widget body,
+      int currentIndex, void Function(int)? onTabPressed) tabsScaffoldBuilder;
 
-  final Widget Function(BuildContext context, Widget body)
+  final Widget Function(BuildContext context, VRouterData state, Widget body)
       stackedScaffoldBuilder;
+
+  /// This BuilderMethod wraps both tabsScaffoldBuilder and stackedScaffoldBuilder.
+  final Widget Function(BuildContext context, VRouterData state, Widget child)?
+      buildWrapper;
 
   List<VxTab> _generateInitialTabs() {
     return List.generate(tabsLength, (index) {
@@ -214,9 +232,13 @@ class TabsScaffoldWidget extends HookWidget {
 
     ///TODO Add animation for stackedIndex
 
-    return currentIndex == TabsScaffoldWidget.stackedScaffoldIndex
+    final widget = currentIndex == TabsScaffoldWidget.stackedScaffoldIndex
         ? _buildStackedScaffold(tabs, lastTabIndex, context)
         : _buildTabsScaffold(context, tabs);
+
+    final buildWrapper = this.buildWrapper;
+
+    return buildWrapper == null ? widget : buildWrapper(context, state, widget);
   }
 
   /// The tabs scaffold
@@ -224,6 +246,7 @@ class TabsScaffoldWidget extends HookWidget {
       BuildContext context, ValueNotifier<List<VxTab>> tabs) {
     return tabsScaffoldBuilder(
       context,
+      state,
 
       ///The indexed stack contains the tabs only (without the stackedScaffold)
       IndexedStack(
@@ -249,6 +272,7 @@ class TabsScaffoldWidget extends HookWidget {
       },
       child: stackedScaffoldBuilder(
         context,
+        state,
 
         ///The indexed stack contains the tabs + the stacked child.
         IndexedStack(
