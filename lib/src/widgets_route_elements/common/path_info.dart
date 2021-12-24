@@ -15,6 +15,9 @@ import 'package:vrouter/vrouter.dart';
 ///  )
 ///
 /// ```
+
+///TODO instead of Using Path Info, force the use of a VxRoute ?
+
 class PathInfo {
   const PathInfo({
     required this.path,

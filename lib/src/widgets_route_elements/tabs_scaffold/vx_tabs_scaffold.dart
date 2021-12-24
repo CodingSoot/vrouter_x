@@ -2,8 +2,8 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:vrouter/vrouter.dart';
-import 'package:vrouter_x/src/widgets_route_elements/helpers/path_info.dart';
-import 'package:vrouter_x/src/widgets_route_elements/helpers/vx_tab.dart';
+import 'package:vrouter_x/src/widgets_route_elements/common/path_info.dart';
+import 'package:vrouter_x/src/widgets_route_elements/common/vx_tab.dart';
 
 /// A [VRouteElement] that allows you to easily setup a [BottomNavigationBar]
 /// or your own [NavigationBar].
