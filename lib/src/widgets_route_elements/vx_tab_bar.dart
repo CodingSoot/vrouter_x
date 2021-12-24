@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:vrouter/vrouter.dart';
-import 'package:vrouter_x/src/helpers/path_info.dart';
-import 'package:vrouter_x/src/helpers/tab_path_info.dart';
-import 'package:vrouter_x/src/helpers/vx_tab.dart';
+import 'package:vrouter_x/src/widgets_route_elements/helpers/path_info.dart';
+import 'package:vrouter_x/src/widgets_route_elements/helpers/tab_path_info.dart';
+import 'package:vrouter_x/src/widgets_route_elements/helpers/vx_tab.dart';
 
 /// A [VRouteElement] that allows you to easily setup a [TabBarView] where each
 /// tab is a different router with its own stack.
