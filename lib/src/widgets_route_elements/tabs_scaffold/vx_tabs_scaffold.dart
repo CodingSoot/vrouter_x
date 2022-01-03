@@ -2,6 +2,8 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:vrouter/vrouter.dart';
+import 'package:vrouter_x/src/route_elements/common/vx_route_base.dart';
+import 'package:vrouter_x/src/route_elements/route_elements.dart';
 import 'package:vrouter_x/src/widgets_route_elements/common/path_info.dart';
 import 'package:vrouter_x/src/widgets_route_elements/common/vx_tab.dart';
 
@@ -29,7 +31,7 @@ class VxTabsScaffold extends VRouteElementBuilder {
   final String path;
 
   /// The [VRouteElement]s of the tabs
-  final List<PathInfo> tabsRoutes;
+  final List<VxSimpleRoute> tabsRoutes;
 
   /// The [VRouteElement]s of the routes that will be stacked on top of the Tabs
   /// (Optional)
@@ -51,7 +53,7 @@ class VxTabsScaffold extends VRouteElementBuilder {
   ///        ),
   ///  ),
   /// ```
-  final List<PathInfo>? stackedRoutes;
+  final List<VxSimpleRoute>? stackedRoutes;
 
   /// Builder method for the scaffold of the [tabsRoutes].
   ///
@@ -92,7 +94,8 @@ class VxTabsScaffold extends VRouteElementBuilder {
 
   @override
   List<VRouteElement> buildRoutes() {
-    final tabsPaths = tabsRoutes.map((tabRoute) => tabRoute.path).toList();
+    final tabsPaths =
+        tabsRoutes.map((tabRoute) => tabRoute.routeInfoInstance.path).toList();
 
     final tabsRouteElements = tabsRoutes.mapIndexed((index, tabRoute) {
       return VNester.builder(
@@ -110,7 +113,7 @@ class VxTabsScaffold extends VRouteElementBuilder {
           tabsScaffoldBuilder: tabsScaffoldBuilder,
           buildWrapper: buildWrapper,
         ),
-        nestedRoutes: [tabRoute.build()],
+        nestedRoutes: [tabRoute],
       );
     }).toList();
 
@@ -134,7 +137,7 @@ class VxTabsScaffold extends VRouteElementBuilder {
             tabsScaffoldBuilder: tabsScaffoldBuilder,
             buildWrapper: buildWrapper,
           ),
-          nestedRoutes: stackedRoutes!.map((route) => route.build()).toList(),
+          nestedRoutes: stackedRoutes!,
         ),
     ];
   }
