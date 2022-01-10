@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-///Simple wrapper for the different possible refs, with only reading allowed.
+/// Simple wrapper for the different possible riverpod refs, with only reading
+/// allowed.
 class RouteRef {
   RouteRef.fromRef(Ref ref) : _reader = ref.read;
 
