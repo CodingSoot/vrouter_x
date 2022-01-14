@@ -274,7 +274,7 @@ class PlusRoute extends VxSimpleRoute {
     return [
       VWidget(
           path: null,
-          widget: const ColorScreen(color: Colors.purple, title: 'Purple')),
+          widget: const ColorScreen(color: Colors.pink, title: 'Plus')),
     ];
   }
 }
