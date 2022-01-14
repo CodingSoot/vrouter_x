@@ -5,6 +5,7 @@ import 'package:vrouter/vrouter.dart';
 import 'package:vrouter_x/src/route_elements/common/route_info_base.dart';
 import 'package:vrouter_x/src/route_elements/common/vx_route_base.dart';
 import 'package:vrouter_x/src/route_elements/route_elements.dart';
+import 'package:vrouter_x/src/utils/errors.dart';
 import 'package:vrouter_x/src/utils/logger.dart';
 import 'package:vrouter_x/src/utils/vx_utils.dart';
 
@@ -39,6 +40,7 @@ part 'data_route_info.dart';
 ///       : super(
 ///           routeInfoInstance: routeInfo,
 ///           routeRef: routeRef,
+///           ...
 ///         );
 ///
 ///   static final routeInfo = DataRouteInfo<BookRouteData>(
@@ -49,12 +51,11 @@ part 'data_route_info.dart';
 ///   );
 ///
 ///   @override
-///   List<VRouteElement> buildRoutesX(
-///       Widget Function(Widget child) widgetWrapper) {
+///   List<VRouteElement> buildRoutesX() {
 ///     return [
 ///       VWidget(
-///         path: routeInfo.path,
-///         widget: widgetWrapper(BookPage()),
+///         path: null,
+///         widget: BookPage(),
 ///       ),
 ///     ];
 ///   }
@@ -65,11 +66,8 @@ abstract class VxDataRoute<P extends RouteData> extends VxRouteBase {
   VxDataRoute({
     required this.routeRef,
     required this.routeInfoInstance,
-    this.guardBefore = true,
-    this.redirectingScreen = _emptyRedirectingScreen,
-    this.beforeRedirect = _voidBeforeRedirect,
-    this.afterRedirect = _voidAfterRedirect,
-    this.minimumRedirectingScreenDuration = const Duration(milliseconds: 500),
+    this.widgetBuilder = VxRouteBase.defaultWidgetBuilder,
+    this.afterRedirect = _voidAfter,
   });
 
   @override
@@ -78,46 +76,28 @@ abstract class VxDataRoute<P extends RouteData> extends VxRouteBase {
   @override
   final DataRouteInfo<P> routeInfoInstance;
 
-  /// This screen is shown during redirection, if [guardBefore] is false.
-  ///
-  /// Defaults to [VxDataRoute._emptyRedirectingScreen]
-  final Widget Function(BuildContext context, WidgetRef ref) redirectingScreen;
+  @override
+  final Widget Function(
+          BuildContext context, VRouterData vRouterData, Widget child)
+      widgetBuilder;
 
-  /// The minimum duration the [redirectingScreen] should be shown.
+  /// Called after redirecting out of this route.
   ///
-  /// NB: The redirection won't happen until [beforeRedirect] has
-  /// finished executing AND [minimumRedirectingScreenDuration] has elapsed.
-  final Duration minimumRedirectingScreenDuration;
-
-  /// Called before redirecting.
-  ///
-  /// Defaults to [VxDataRoute._voidBeforeRedirect].
-  final Future<void> Function() beforeRedirect;
-
-  /// Called after redirecting.
-  ///
-  /// Defaults to [VxDataRoute._voidAfterRedirect].
+  /// Defaults to [VxDataRoute._voidAfter].
   final Future<void> Function() afterRedirect;
 
-  /// Whether the route should be guarded beforeEnter and beforeUpdate.
+  static Future<void> _voidAfter() async {}
+
+  /// Redirects to [DataRouteInfo.redirectToRouteName], using
+  /// [DataRouteInfo.redirectToResolver] to determine what path parameters to
+  /// pass to [VRouterNavigator.toNamed] during the redirection. (As well as
+  /// other optional parameters such as the query parameters, hash...)
   ///
-  /// If true, the redirection happens before the route is opened, so the
-  /// [redirectingScreen] is not displayed.
-  ///
-  /// If false, the redirection happens after the route is opened, so the
-  /// [redirectingScreen] is displayed.
-  final bool guardBefore;
-
-  static Widget _emptyRedirectingScreen(BuildContext context, WidgetRef ref) =>
-      Container();
-
-  static Future<void> _voidBeforeRedirect() async {}
-
-  static Future<void> _voidAfterRedirect() async {}
-
   /// [previousVRouterData] is the vRouterData of the route before redirecting.
   void _redirect(
-      VRouterNavigator vRouterNavigator, VRouterData previousVRouterData) {
+    VRedirector vRedirector,
+    VRouterData previousVRouterData,
+  ) {
     final redirectToResolver = routeInfoInstance.redirectToResolver;
 
     final queryParameters =
@@ -147,7 +127,7 @@ abstract class VxDataRoute<P extends RouteData> extends VxRouteBase {
       noPathParameters: (noPathParameters) => const <String, String>{},
     );
 
-    vRouterNavigator.toNamed(
+    vRedirector.toNamed(
       routeInfoInstance.redirectToRouteName,
       pathParameters: pathParameters,
       queryParameters: queryParameters,
@@ -158,22 +138,17 @@ abstract class VxDataRoute<P extends RouteData> extends VxRouteBase {
   }
 
   /// BeforeEnter and BeforeUpdate, we verify if the routeData has been
-  /// provided. If not, we redirect to [routeInfoInstance.redirectToRouteName].
+  /// provided. If not, we redirect to [DataRouteInfo.redirectToRouteName].
   ///
   Future<void> _beforeEnterAndUpdate(VRedirector vRedirector) async {
-    if (guardBefore) {
-      await beforeRedirect();
+    final routeDataOption =
+        routeRef.read(routeInfoInstance._routeDataOptionProvider);
 
-      final routeDataOption =
-          routeRef.read(routeInfoInstance._routeDataOptionProvider);
-      routeDataOption.match(
-        (some) {},
-        () {
-          _redirect(vRedirector, vRedirector.newVRouterData!);
-        },
-      );
+    if (routeDataOption.isNone()) {
+      _redirect(vRedirector, vRedirector.newVRouterData!);
 
-      await afterRedirect();
+      /// Not awaiting this.
+      afterRedirect();
     }
   }
 
@@ -181,107 +156,44 @@ abstract class VxDataRoute<P extends RouteData> extends VxRouteBase {
   List<VRouteElement> buildRoutes() {
     return [
       VGuard(
-        beforeEnter: _beforeEnterAndUpdate,
-        beforeUpdate: _beforeEnterAndUpdate,
-        stackedRoutes: buildRoutesX(
-          (child) => Consumer(
-            builder: (context, ref, _) {
-              ref.watch(routeInfoInstance._widgetDisposedProvider);
+          beforeEnter: _beforeEnterAndUpdate,
+          beforeUpdate: _beforeEnterAndUpdate,
+          stackedRoutes: [
+            VNester.builder(
+              path: routeInfoInstance.path,
+              name: routeInfoInstance.name,
+              key: ValueKey(routeInfoInstance.name),
+              widgetBuilder: (context, vRouterData, child) => Consumer(
+                builder: (context, ref, _) {
+                  ref.watch(routeInfoInstance._widgetDisposedProvider);
 
-              final routeDataOption =
-                  ref.watch(routeInfoInstance._routeDataOptionProvider);
+                  final routeDataOption =
+                      ref.watch(routeInfoInstance._routeDataOptionProvider);
 
-              return routeDataOption.match(
-                (routeData) => ProviderScope(
-                  overrides: [
-                    routeInfoInstance.routeDataProvider
-                        .overrideWithValue(routeData),
-                  ],
-                  child: child,
-                ),
-                () {
-                  /// If we actually entered this route without providing any data,
-                  /// we handle the redirection and show a redirectionScreen
-                  /// meanwhile.
-                  ///
-                  /// This is only supposed to happen if [guardBefore] is false.
-                  /// If [guardBefore] is true, then the navigation should have
-                  /// been stopped by the VGuard.
-                  ///
-
-                  if (guardBefore) {
-                    logger.w('''
-                    This VxDataRoute has been displayed while no routeData has been provided.
-                    This should have been prevented by the VGuard. If you can't find
-                    the root cause, you can ignore this message, since the redirection will be 
-                    performed anyway.
-                    ''');
-                  }
-
-                  WidgetsBinding.instance!
-                      .addPostFrameCallback((timeStamp) async {
-                    final startTime = DateTime.now();
-
-                    await beforeRedirect();
-
-                    final elapsedTime = DateTime.now().difference(startTime);
-
-                    if (elapsedTime < minimumRedirectingScreenDuration) {
-                      await Future.delayed(
-                          minimumRedirectingScreenDuration - elapsedTime);
-                    }
-
-                    _redirect(context.vRouter, context.vRouter);
-
-                    await afterRedirect();
-                  });
-                  return redirectingScreen(context, ref);
+                  return routeDataOption.match(
+                    (routeData) => ProviderScope(
+                      overrides: [
+                        routeInfoInstance.routeDataProvider
+                            .overrideWithValue(routeData),
+                      ],
+                      child: widgetBuilder(context, vRouterData, child),
+                    ),
+                    () {
+                      throw UnreachableError(customMessage: '''
+                      The route has been accessed while its routeData is none().
+                      This should have been prevented by VxRouteSwitcher's VGuard.
+                      ''');
+                    },
+                  );
                 },
-              );
-            },
-          ),
-        ),
-      ),
+              ),
+              nestedRoutes: buildRoutesX(),
+            ),
+          ])
     ];
   }
 
   /// See [buildRoutes].
-  ///
-  /// ⚠️ The [widgetWrapper] should wrap all the **top-level** [VRouteElement]s'
-  /// widgets. Generally, you'll only have one top-level [VRouteElement].
-  ///
-  /// Example :
-  ///
-  /// ```dart
-  /// List<VRouteElement> buildRoutesX(
-  ///   Widget Function(Widget child) widgetWrapper,
-  /// ) {
-  ///   return [
-  ///     VWidget(
-  ///       path: path1,
-  ///       widget: widgetWrapper(widget1), // HERE
-  ///       stackedRoutes: [
-  ///         // These routes' widgets don't need to be wrapped
-  ///         ...
-  ///       ],
-  ///     ),
-  ///     VNester(
-  ///       path: path2,
-  ///       widgetBuilder: widgetWrapper, // HERE
-  ///       nestedRoutes: [
-  ///         // These routes' widgets don't need to be wrapped
-  ///         ...
-  ///       ],
-  ///       stackedRoutes: [
-  ///         // These routes' widgets don't need to be wrapped
-  ///         ...
-  ///       ]
-  ///     ),
-  ///   ];
-  /// }
-  /// ```
-  ///
-  List<VRouteElement> buildRoutesX(
-    Widget Function(Widget child) widgetWrapper,
-  );
+
+  List<VRouteElement> buildRoutesX();
 }

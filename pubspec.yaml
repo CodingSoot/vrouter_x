@@ -10,15 +10,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_hooks: ^0.18.1
-  flutter_riverpod: ^1.0.3
   fpdart: ^0.0.12
+  freezed_annotation: ^1.1.0
+  hooks_riverpod: ^1.0.3
+  logger: ^1.1.0
+  queue : ^3.1.0+1
   vrouter: ^1.2.0+15
 
 dev_dependencies:
+  build_runner: ^2.1.7
   flutter_lints: ^1.0.0
   flutter_test:
     sdk: flutter
+  freezed: ^1.1.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

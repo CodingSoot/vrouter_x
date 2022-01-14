@@ -1,6 +1,35 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
+/// This hook replaces the use of the mixin [AutomaticKeepAliveClientMixin].
+///
+/// **Equivalent of :**
+///
+/// ```dart
+/// class MyTab extends StatefulWidget {
+///   const MyTab({ Key? key }) : super(key: key);
+///
+///   @override
+///   _MyTabState createState() => _MyTabState();
+/// }
+///
+/// /// 1. Mixin [AutomaticKeepAliveClientMixin]
+/// class _MyTabState extends State<MyTab> with AutomaticKeepAliveClientMixin<MyTab> {
+///
+///   @override
+///   Widget build(BuildContext context) {
+///     /// 2. Call super.build(context);
+///     super.build(context);
+///
+///     return ...
+///   }
+///
+///   /// 3. Override [wantKeepAlive]
+///   @override
+///   bool get wantKeepAlive => true;
+/// }
+///
+/// ```
 void useAutomaticKeepAlive({
   bool wantKeepAlive = true,
 }) =>

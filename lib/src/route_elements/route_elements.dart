@@ -6,7 +6,7 @@ export 'common/route_data.dart' show RouteData;
 export 'data_route/vx_data_route.dart' show DataRouteInfo, VxDataRoute;
 export 'data_route/redirect_to_resolver.dart' show RedirectToResolver;
 
-export 'route_switcher/map_result.dart' show MapResult;
+export 'route_switcher/matched_route_details.dart' show MatchedRouteDetails;
 export 'route_switcher/vx_route_switcher.dart'
     show SwitchRouteInfo, VxSwitchRoute, VxRouteSwitcher;
 

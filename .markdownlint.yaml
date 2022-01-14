@@ -1,0 +1,8 @@
+# Unordered list indentation
+"MD007": false
+# 80 characters per line limit
+"MD010": false
+# no hardcoded tab
+"MD013": false
+# no duplicate entity
+"MD024": false
