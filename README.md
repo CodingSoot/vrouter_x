@@ -65,3 +65,26 @@ These VRouteElements are abstract classes that are supposed to be extended.
 - **VxSimpleRoute**
 - **VxDataRoute**
 - **VxSwitchRoute**
+
+# Important Remarks
+
+For `VxRouteSwitcher` and `VxDataRoute`, I tried to implement something like a redirecting screen (± a switching screen). And also have async methods such as beforeRedirect and beforeSwitch. To prevent concurrency issues, all navigations (switching/redirections) were queued.
+
+However, it was nearly impossible to do so using vRouter. That's because every navigation triggers a new beforeEnter/beforeUpdate callback, which then is nearly impossible to track its origin. I tried many methods : Using the vRouterData, using mutable propreties / a custom queue, static providers, query parameters... All methods failed, each one for a different reason (mutable propreties were easily messed up - static providers hold the same data for the same route so queuing the same route twice broke the system - query parameters are modifiable by the user...). And this was only a part of the problem, as the whole idea of making the navigation asynchroneous was too complex for vRouter.
+
+This is why I settled on keeping the navigation synchroneous, and only having afterSwitch / afterRedirect methods, that didn't interfere with the navigation cycle because I put them at the end.
+
+It is still possible to make something like a switchingScreen, by structuring your VxSwitchRoute this way :
+
+```json
+VGuard : after Enter, we wait a little before redirecting to a stackedRoute.
+|
+| _ VWidget : The switching screen
+    |
+    |_ Stacked routes : ..your routes..
+```
+
+The advantages are that :
+
+- The transitions are working proprely right off the bat.
+- Even if the redirection is asynchroneous, there is no concurrency issues to fear. So if for example the state changes before the redirection happens, then the VxRouteSwitcher will switch to the new switchRoute, and when the redirection is finally executed it will be locked.
