@@ -19,7 +19,7 @@ class MyState with _$MyState {
 }
 
 final myStateProvider = StateProvider<MyState>((ref) {
-  return const MyState.main(number: 0);
+  return const MyState.profile(number: 0);
 });
 
 class MyScaffold extends ConsumerWidget {
@@ -40,7 +40,8 @@ class MyScaffold extends ConsumerWidget {
                 backgroundColor: Colors.lightBlue,
                 child: const Icon(Icons.home),
                 onPressed: () {
-                  context.vRouter.to(MainRoute.routeInfo.path!);
+                  // context.vRouter.to(MainRoute.routeInfo.path!);
+                  context.vRouter.to('/plus/a?t=2#here');
                 },
               ),
               const SizedBox(height: 20),
@@ -119,7 +120,7 @@ class MyApp extends ConsumerWidget {
 
     return VRouter(
       debugShowCheckedModeBanner: false,
-      initialUrl: '/profile',
+      initialUrl: '/plus/initial',
       routes: [
         VxRouteSwitcher<MyState>(
           routeRef,
@@ -129,6 +130,8 @@ class MyApp extends ConsumerWidget {
             ProfileRoute(routeRef),
             PurpleRoute(routeRef),
           ],
+          redirectToQueryParam: 'redirect-to',
+          mainSwitchRouteName: MainRoute.routeInfo.name,
           provider: myStateProvider,
           mapStateToSwitchRoute: (state, previousVRouterData) {
             return state.when(
@@ -165,12 +168,12 @@ class PurpleRoute extends VxSwitchRoute<PurpleRouteData> {
           widgetBuilder: (context, vRouterData, child) =>
               MyScaffold(body: child),
           afterRedirect: () async {
-            await Future.delayed(Duration(seconds: 1));
-            print('redirected out of purple');
+            await Future.delayed(const Duration(seconds: 1));
+            print('redirected out of purple 1s ago');
           },
           afterSwitch: () async {
-            await Future.delayed(Duration(seconds: 1));
-            print('switched to purple');
+            await Future.delayed(const Duration(seconds: 1));
+            print('switched to purple 1s ago');
           },
         );
 
@@ -201,8 +204,8 @@ class GreenRoute extends VxDataRoute {
           routeInfoInstance: routeInfo,
           routeRef: routeRef,
           afterRedirect: () async {
-            await Future.delayed(Duration(seconds: 1));
-            print('redirected out of green');
+            await Future.delayed(const Duration(seconds: 1));
+            print('redirected out of green 1s ago');
           },
         );
 
@@ -231,7 +234,10 @@ class GreenRoute extends VxDataRoute {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    PlusRoute.routeInfo.navigate(context.vRouter);
+                    PlusRoute.routeInfo.navigate(
+                      context.vRouter,
+                      pathParameters: {'name': 'green'},
+                    );
                   },
                   child: const Text('Plus'),
                 ),
@@ -246,7 +252,10 @@ class GreenRoute extends VxDataRoute {
                 title: 'Light Green',
                 extraWidget: (context) => ElevatedButton(
                   onPressed: () {
-                    PlusRoute.routeInfo.navigate(context.vRouter);
+                    PlusRoute.routeInfo.navigate(
+                      context.vRouter,
+                      pathParameters: {'name': 'light-green'},
+                    );
                   },
                   child: const Text('Plus'),
                 ),
@@ -265,7 +274,7 @@ class PlusRoute extends VxSimpleRoute {
         );
 
   static final routeInfo = SimpleRouteInfo(
-    path: '/plus',
+    path: '/plus/:name',
     name: 'plus',
   );
 
@@ -292,12 +301,12 @@ class ProfileRoute extends VxSwitchRoute<ProfileRouteData> {
           widgetBuilder: (context, vRouterData, child) =>
               MyScaffold(body: child),
           afterRedirect: () async {
-            await Future.delayed(Duration(seconds: 1));
-            print('redirected out of profile');
+            await Future.delayed(const Duration(seconds: 1));
+            print('redirected out of profile 1s ago');
           },
           afterSwitch: () async {
-            await Future.delayed(Duration(seconds: 1));
-            print('switched to profile');
+            await Future.delayed(const Duration(seconds: 1));
+            print('switched to profile 1s ago');
           },
         );
 
@@ -313,7 +322,10 @@ class ProfileRoute extends VxSwitchRoute<ProfileRouteData> {
         path: null,
         widget: const ProfileScreen(),
         stackedRoutes: [
-          VWidget(path: 'settings', widget: const SettingsScreen())
+          VWidget(
+              path: 'settings',
+              name: 'settings',
+              widget: const SettingsScreen())
         ],
       ),
     ];
@@ -333,12 +345,12 @@ class MainRoute extends VxSwitchRoute<MainRouteData> {
           widgetBuilder: (context, vRouterData, child) =>
               MyScaffold(body: child),
           afterRedirect: () async {
-            await Future.delayed(Duration(seconds: 1));
-            print('redirected out of main');
+            await Future.delayed(const Duration(seconds: 1));
+            print('redirected out of main 1s ago');
           },
           afterSwitch: () async {
-            await Future.delayed(Duration(seconds: 1));
-            print('switched to main');
+            await Future.delayed(const Duration(seconds: 1));
+            print('switched to main 1s ago');
           },
         );
 
@@ -388,10 +400,13 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const BaseWidget(
+    return BaseWidget(
       title: 'Settings',
       buttonText: 'Pop',
-      to: '/profile',
+      onClick: () => context.vRouter.toNamed(
+        'profile',
+        hash: '',
+      ),
     );
   }
 }
@@ -404,22 +419,25 @@ class ProfileScreen extends ConsumerWidget {
     final routeData = ref.watch(ProfileRoute.routeInfo.routeDataProvider);
 
     return BaseWidget(
-        title: 'Profile : ${routeData.number}',
-        buttonText: 'Go to Settings',
-        to: '/profile/settings');
+      title: 'Profile : ${routeData.number}',
+      buttonText: 'Go to Settings',
+      onClick: () => context.vRouter.toNamed(
+        'settings',
+      ),
+    );
   }
 }
 
 class BaseWidget extends HookWidget {
   final String title;
   final String buttonText;
-  final String to;
+  final Function() onClick;
 
   const BaseWidget({
     Key? key,
     required this.title,
     required this.buttonText,
-    required this.to,
+    required this.onClick,
   }) : super(key: key);
 
   @override
@@ -434,7 +452,7 @@ class BaseWidget extends HookWidget {
             Text(title),
             const SizedBox(height: 50),
             ElevatedButton(
-              onPressed: () => context.vRouter.to(to),
+              onPressed: onClick,
               child: Text(buttonText),
             ),
             const SizedBox(height: 50),
