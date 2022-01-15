@@ -15,6 +15,12 @@ part 'vx_switch_route.dart';
 
 /// This is a route element (a VNester) that allows to automatically navigate
 /// between its [switchRoutes] based on the state of a riverpod [provider].
+///
+/// Some terminology :
+/// - Matched switchRoute : The switchRoute matching the current state of your
+///   provider
+/// - Switching : Automatically navigating to the matched switchRoute when the
+///   state changes.
 class VxRouteSwitcher<T> extends VRouteElementBuilder {
   VxRouteSwitcher(
     this.routeRef, {
@@ -22,6 +28,8 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     required this.switchRoutes,
     required this.provider,
     required this.mapStateToSwitchRoute,
+    required this.mainSwitchRouteName,
+    required this.redirectToQueryParam,
     this.transitionDuration,
     this.reverseTransitionDuration,
     this.buildTransition,
@@ -30,21 +38,54 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     this.aliases = const [],
     this.navigatorKey,
     this.fullscreenDialog = false,
-  }) : assert(
+  })  : assert(
             switchRoutes
                     .map((route) => route.routeInfoInstance.name)
                     .toSet()
                     .length ==
                 switchRoutes.length,
-            "The switchRoutes should have unique names.");
+            "The switchRoutes should have unique names."),
+        assert(
+            switchRoutes
+                .map((route) => route.routeInfoInstance.name)
+                .contains(mainSwitchRouteName),
+            "The mainSwitchRouteName should be the name of a switchRoute.") {
+    /// Initializing the late final class members
+    /// [VxSwitchRoute.isMainSwitchRoute] and
+    /// [VxSwitchRoute.redirectToQueryParam]
+    for (final switchRoute in switchRoutes) {
+      switchRoute.isMainSwitchRoute =
+          switchRoute.routeInfoInstance.name == mainSwitchRouteName;
+      switchRoute.redirectToQueryParam = redirectToQueryParam;
+    }
+  }
+
+  /// This is the name of your main switchRoute.
+  ///
+  /// When you navigate to a **url** that points to a route inside your main
+  /// switchRoute, but the matched switchRoute is not the main switchRoute, you
+  /// are redirected to the matched switchRoute.
+  ///
+  /// In this situation, that **url** is stored inside the "redirectTo" query
+  /// parameter, which will be persisted until the state matches your main
+  /// switchRoute. When that happens, you are automatically navigated to that
+  /// **url**, and the "redirectTo" query parameter is deleted.
+  ///
+  final String mainSwitchRouteName;
+
+  /// The name of the "redirectTo" query parameter.
+  ///
+  /// See [mainSwitchRouteName]
+  final String redirectToQueryParam;
 
   final RouteRef routeRef;
 
   /// The provider you want to listen to.
   final ProviderBase<T> provider;
 
-  /// Maps the current [state] of the [provider] to the route that should be
-  /// displayed (= the matched switchRoute), wrapped inside a [MatchedRouteDetails].
+  /// Maps the current [state] of the [provider] to the switchRoute that should
+  /// be displayed (= the matched switchRoute), wrapped inside a
+  /// [MatchedRouteDetails].
   ///
   /// Example :
   ///
@@ -64,9 +105,9 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
   /// )
   /// ```
   ///
-  /// You can provide additionnal parameters into the [MatchedRouteDetails], such as the
-  /// path parameters, query parameters... which will be passed to the
-  /// [VRouterNavigator.toNamed] method during navigation.
+  /// You can provide additionnal parameters into the [MatchedRouteDetails],
+  /// such as the path parameters, query parameters... which will be passed to
+  /// the [VRouterNavigator.toNamed] method during navigation.
   ///
   /// [vRouterData] is the vRouterData of the route before switching (=
   /// automatically navigating) to the matched switchRoute. It can be useful for
@@ -149,11 +190,11 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     required String debugSource,
     required VRouterNavigator vRouterNavigator,
     required MatchedRouteDetails<RouteData> matchedRouteDetails,
+    required String? redirectToQueryParamValue,
   }) {
     logger.i('''
-    ↓↓↓ Navigating : $debugSource ↓↓↓
-    destination : ${matchedRouteDetails.switchRouteName}
-
+    Navigating : $debugSource
+    Destination : ${matchedRouteDetails.switchRouteName}
     ''');
 
     final matchedSwitchRoute =
@@ -164,7 +205,11 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
       vRouterNavigator,
       data: matchedRouteDetails.routeData,
       pathParameters: matchedRouteDetails.pathParameters,
-      queryParameters: matchedRouteDetails.queryParameters,
+      queryParameters: {
+        ...matchedRouteDetails.queryParameters,
+        if (redirectToQueryParamValue != null)
+          redirectToQueryParam: redirectToQueryParamValue,
+      },
       historyState: matchedRouteDetails.historyState,
       hash: matchedRouteDetails.hash,
       isReplacement: matchedRouteDetails.isReplacement,
@@ -176,15 +221,33 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
   /// 1. We verify if the switchRoute we want to access is the matched
   ///    switchRoute
   /// 2. If no : We redirect to the matched switchRoute.
-  /// 3. If yes : We verify if routeData is missing. If so, we navigate to the
-  ///    same switchRoute while passing the missing routeData (that is contained
-  ///    in `matchedRouteDetails`)
+  /// 3. If yes : We verify if routeData is missing. If so, we call
+  ///    [VxSwitchRoute._setRouteData] to set the missing routeData (that is
+  ///    contained in `matchedRouteDetails`)
+  ///
+  /// ---
+  /// For the "redirectTo" query parameter :
+  /// - If shouldRedirect == true :
+  ///   - (A) If we are redirecting from a main switchRoute to another
+  ///     switchRoute : We encode the previousUrl in the redirectTo query
+  ///     parameter
+  ///   - (B) If we are redirecting from a switchRoute to another one or to a
+  ///     main switchRoute : We pass the same redirectTo query parameter
+  /// - Else :
+  ///   - (C) If we are entering the main switchRoute, we navigate to the
+  ///     "redirect-to" url, and we delete the query-parameter
+  ///
+  /// ---
+  /// NB: You can encode a string multiple times with the percent encoding and
+  /// get the original value by decoding it the same amount of times. So there's
+  /// nothing to worry about here. (Source :
+  /// https://stackoverflow.com/a/2433211/13297133)
   ///
 
   Future<void> _beforeEnterAndUpdate(VRedirector vRedirector) async {
     /// 1.
-    final newSwitchRoute =
-        _getSwitchRouteFromVRouterData(vRedirector.newVRouterData!);
+    final newVRouterData = vRedirector.newVRouterData!;
+    final newSwitchRoute = _getSwitchRouteFromVRouterData(newVRouterData);
 
     final state = routeRef.read(provider);
     final matchedRouteDetails =
@@ -195,28 +258,91 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
 
     /// 2.
     if (shouldRedirect) {
+      final redirectTo =
+          (newSwitchRoute.routeInfoInstance.name == mainSwitchRouteName)
+              ?
+              // A
+              Uri.encodeQueryComponent(newVRouterData.url!)
+              :
+              // B
+              newVRouterData.queryParameters[redirectToQueryParam];
+
       _navigate(
         debugSource: '_beforeEnterAndUpdate (1)',
         vRouterNavigator: vRedirector,
         matchedRouteDetails: matchedRouteDetails,
+        redirectToQueryParamValue: redirectTo,
       );
 
       /// Not awaiting this on purpose.
       newSwitchRoute.afterRedirect();
+
+      return;
     }
 
-    // /// 3.
-    else {
-      final routeDataOption = routeRef
-          .read(newSwitchRoute.routeInfoInstance._routeDataOptionProvider);
-      if (routeDataOption.isNone()) {
-        _navigate(
-          debugSource: '_beforeEnterAndUpdate (2)',
-          vRouterNavigator: vRedirector,
-          matchedRouteDetails: matchedRouteDetails,
-        );
+    /// 3.
+
+    final routeDataOption = routeRef
+        .read(newSwitchRoute.routeInfoInstance._routeDataOptionProvider);
+
+    if (routeDataOption.isNone()) {
+      newSwitchRoute.routeInfoInstance._setRouteData(
+        routeRef,
+        data: matchedRouteDetails.routeData,
+      );
+      return;
+    }
+
+    // C
+    if (newSwitchRoute.routeInfoInstance.name == mainSwitchRouteName) {
+      final redirectTo = newVRouterData.queryParameters[redirectToQueryParam];
+      if (redirectTo == null) {
+        return;
+      }
+
+      try {
+        /// This throws an [ArgumentError] if the queryParameter is not encoded
+        /// correctly.
+        final redirectToUrl = Uri.decodeQueryComponent(redirectTo);
+
+        /// We verify if the decoded redirectTo url is valid.
+        /// This throws a [FormatException] if the url is invalid.
+        Uri.parse(redirectToUrl);
+
+        vRedirector.to(redirectToUrl);
+        logger.i('''
+        Redirecting to the url inside the "redirectTo" query parameter "$redirectToQueryParam".
+        Destination : $redirectToUrl
+        ''');
+      } on ArgumentError {
+        _handleInvalidRedirectToQueryParam(vRedirector, newVRouterData);
+      } on FormatException {
+        _handleInvalidRedirectToQueryParam(vRedirector, newVRouterData);
       }
     }
+  }
+
+  /// When the "redirectTo" query parameter is invalid, we remove it from the
+  /// url and navigate again.
+  void _handleInvalidRedirectToQueryParam(
+      VRedirector vRedirector, VRouterData newVRouterData) {
+    final invalidUri = Uri.parse(newVRouterData.url!);
+
+    //We remove the invalid redirect-to query param
+    final queryParams = Map<String, String>.from(invalidUri.queryParameters);
+    queryParams.remove(redirectToQueryParam);
+
+    final validUri = invalidUri.replace(
+      queryParameters: queryParams,
+    );
+
+    logger.w('''
+    Invalid "redirectTo" query parameter "$redirectToQueryParam".
+    Value : ${newVRouterData.queryParameters[redirectToQueryParam]}
+    Redirecting to url : ${validUri.toString()}
+    ''');
+
+    vRedirector.to(validUri.toString());
   }
 
   /// When we are inside a route, and the state changed :
@@ -227,6 +353,10 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
   /// 3. If yes : We update the current switchRoute's routeData with the new
   ///    routeData (that is contained in `matchedRouteDetails`)
   ///
+  /// ---
+  /// For the redirect-to : We simply pass around the redirect-to query param
+  /// when switching (if existant).
+
   void _onStateChanged(
       BuildContext context, WidgetRef ref, T? previousState, T newState) {
     final currentSwitchRoute = _getSwitchRouteFromVRouterData(context.vRouter);
@@ -241,9 +371,12 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
 
     if (shouldSwitch) {
       _navigate(
-          debugSource: '_onStateChanged (2)',
-          vRouterNavigator: context.vRouter,
-          matchedRouteDetails: matchedRouteDetails);
+        debugSource: '_onStateChanged (2)',
+        vRouterNavigator: context.vRouter,
+        matchedRouteDetails: matchedRouteDetails,
+        redirectToQueryParamValue:
+            context.vRouter.queryParameters[redirectToQueryParam],
+      );
 
       /// Not awaiting this on purpose.
       matchedSwitchRoute.afterSwitch();

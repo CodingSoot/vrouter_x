@@ -62,8 +62,22 @@ class SwitchRouteInfo<P extends RouteData> extends RouteInfoBase {
     required P data,
   }) {
     if (routeRef.read(_routeDataOptionProvider).isNone()) {
-      throw Exception(
-          '_updateRouteData should only be called when the route is already in the stack');
+      throw Exception('''
+        Called _updateRouteData while the routeData has not been set before.
+        ''');
+    }
+
+    routeRef.read(_routeDataOptionProvider.state).state = some(data);
+  }
+
+  void _setRouteData(
+    RouteRef routeRef, {
+    required P data,
+  }) {
+    if (routeRef.read(_routeDataOptionProvider).isSome()) {
+      throw Exception('''
+        Called _setRouteData while the routeData has been already set.
+        ''');
     }
 
     routeRef.read(_routeDataOptionProvider.state).state = some(data);
