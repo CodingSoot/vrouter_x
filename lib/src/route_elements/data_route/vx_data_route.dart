@@ -6,7 +6,6 @@ import 'package:vrouter_x/src/route_elements/common/route_info_base.dart';
 import 'package:vrouter_x/src/route_elements/common/vx_route_base.dart';
 import 'package:vrouter_x/src/route_elements/route_elements.dart';
 import 'package:vrouter_x/src/utils/errors.dart';
-import 'package:vrouter_x/src/utils/logger.dart';
 import 'package:vrouter_x/src/utils/vx_utils.dart';
 
 part 'data_route_info.dart';
@@ -181,7 +180,7 @@ abstract class VxDataRoute<P extends RouteData> extends VxRouteBase {
                     () {
                       throw UnreachableError(customMessage: '''
                       The route has been accessed while its routeData is none().
-                      This should have been prevented by VxRouteSwitcher's VGuard.
+                      This should have been prevented by VxDataRoute's VGuard.
                       ''');
                     },
                   );
