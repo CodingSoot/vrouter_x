@@ -4,7 +4,7 @@ part of 'vx_route_switcher.dart';
 @immutable
 class SwitchRouteInfo<P extends RouteData> extends RouteInfoBase {
   SwitchRouteInfo({
-    required String path,
+    required String? path,
     required String name,
   }) : super(path: path, name: name) {
     /// When this route's widget tree has been disposed, we reset the

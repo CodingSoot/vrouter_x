@@ -4,7 +4,7 @@ part of 'vx_data_route.dart';
 @immutable
 class DataRouteInfo<P extends RouteData> extends RouteInfoBase {
   DataRouteInfo({
-    required String path,
+    required String? path,
     required String name,
     required this.redirectToRouteName,
     required this.redirectToResolver,
