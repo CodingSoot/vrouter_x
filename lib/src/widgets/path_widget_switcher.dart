@@ -9,7 +9,7 @@ class PathWidgetSwitcher extends StatelessWidget {
   /// vRouterData from the context.
   PathWidgetSwitcher({
     Key? key,
-    required this.builders,
+    required this.pathWidgets,
     this.duration = const Duration(milliseconds: 400),
     this.transitionBuilder = AnimatedSwitcher.defaultTransitionBuilder,
     this.caseSensitive = false,
@@ -22,7 +22,7 @@ class PathWidgetSwitcher extends StatelessWidget {
   PathWidgetSwitcher.fromVRouterData({
     Key? key,
     required VRouterData vRouterData,
-    required this.builders,
+    required this.pathWidgets,
     this.duration = const Duration(milliseconds: 400),
     this.transitionBuilder = AnimatedSwitcher.defaultTransitionBuilder,
     this.caseSensitive = false,
@@ -39,7 +39,7 @@ class PathWidgetSwitcher extends StatelessWidget {
   final AnimatedSwitcherTransitionBuilder transitionBuilder;
 
   /// A list of all matching paths and their associated builder method.
-  final List<PathWidget> Function() builders;
+  final List<PathWidget> pathWidgets;
 
   /// Whether to treat paths as case sensitive or not. Can be over-ridden on a
   /// per path basis.
@@ -50,7 +50,7 @@ class PathWidgetSwitcher extends StatelessWidget {
     //We need only the path when matching (without the query params or the hash)
     final currentPath = vRouterData.path ?? '';
 
-    List<PathWidget> matches = builders().where((pathWidget) {
+    List<PathWidget> matches = pathWidgets.where((pathWidget) {
       if (pathWidget.path == '*') {
         return true;
       }
