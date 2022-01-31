@@ -14,7 +14,7 @@ dependencies:
   freezed_annotation: ^1.1.0
   hooks_riverpod: ^1.0.3
   logger: ^1.1.0
-  queue : ^3.1.0+1
+  path_to_regexp: ^0.4.0
   vrouter: ^1.2.0+18
 
 dev_dependencies:
