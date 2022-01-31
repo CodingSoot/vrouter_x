@@ -4,7 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:vrouter/vrouter.dart';
 import 'package:vrouter_x/src/route_elements/route_elements.dart';
-import 'package:vrouter_x/src/utils/vx_utils.dart';
+import 'package:vrouter_x/src/_core/vx_utils.dart';
 import 'package:vrouter_x/src/widgets_route_elements/common/initial_go_to_resolver.dart';
 import 'package:vrouter_x/src/widgets_route_elements/common/initial_pop_to_resolver.dart';
 import 'package:vrouter_x/src/widgets_route_elements/common/vx_tab.dart';

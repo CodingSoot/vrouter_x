@@ -36,6 +36,21 @@ class RouteNotFoundError extends Error {
   }
 }
 
+/// Thrown when the current vRouterData's path has no matching
+/// PathWidget.
+class UnknownPathWidgetError extends Error {
+  final String path;
+
+  UnknownPathWidgetError({required this.path});
+
+  @override
+  String toString() => '''
+    The path '$path' has no matching PathWidget.
+    Consider using PathWidget(path: '*', builder: myUnknownBuilder) at the 
+    bottom of your PathWidgetSwitcher builders to catch any wrong route.
+    ''';
+}
+
 class UnreachableError extends Error {
   UnreachableError({
     this.customMessage = '',

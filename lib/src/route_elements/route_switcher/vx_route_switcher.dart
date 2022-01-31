@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:vrouter/vrouter.dart';
+import 'package:vrouter_x/src/_core/logger.dart';
 import 'package:vrouter_x/src/route_elements/common/route_info_base.dart';
 import 'package:vrouter_x/src/route_elements/common/route_ref.dart';
 import 'package:vrouter_x/src/route_elements/common/vx_route_base.dart';
 import 'package:vrouter_x/src/route_elements/common/route_data.dart';
 import 'package:vrouter_x/src/route_elements/route_switcher/matched_route_details.dart';
-import 'package:vrouter_x/src/utils/errors.dart';
-import 'package:vrouter_x/src/utils/logger.dart';
+import 'package:vrouter_x/src/_core/errors.dart';
 
 part 'switch_route_info.dart';
 part 'vx_switch_route.dart';

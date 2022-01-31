@@ -5,8 +5,8 @@ import 'package:vrouter/vrouter.dart';
 import 'package:vrouter_x/src/route_elements/common/route_info_base.dart';
 import 'package:vrouter_x/src/route_elements/common/vx_route_base.dart';
 import 'package:vrouter_x/src/route_elements/route_elements.dart';
-import 'package:vrouter_x/src/utils/errors.dart';
-import 'package:vrouter_x/src/utils/vx_utils.dart';
+import 'package:vrouter_x/src/_core/errors.dart';
+import 'package:vrouter_x/src/_core/vx_utils.dart';
 
 part 'data_route_info.dart';
 

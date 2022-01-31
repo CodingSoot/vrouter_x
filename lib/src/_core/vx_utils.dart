@@ -1,5 +1,5 @@
 import 'package:vrouter/vrouter.dart';
-import 'package:vrouter_x/src/utils/errors.dart';
+import 'package:vrouter_x/src/_core/errors.dart';
 
 class VxUtils {
   /// Extracts the path parameters specified in [pathParamsToExtract] from the
