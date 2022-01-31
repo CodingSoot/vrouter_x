@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// A path and associated widget builder.
-class PathWidget {
+class PathWidget<T extends Widget> {
   PathWidget({
     required this.path,
     required this.builder,
@@ -13,7 +13,7 @@ class PathWidget {
         );
 
   final String path;
-  final T Function<T extends Widget>() builder;
+  final T Function() builder;
   final bool prefix;
 
   /// Whether to treat paths as case sensitive or not. If specified, it
@@ -26,7 +26,7 @@ class PathWidget {
 
   PathWidget copyWith({
     String? path,
-    T Function<T extends Widget>()? builder,
+    T Function()? builder,
     bool? prefix,
     bool? caseSensitive,
   }) {
