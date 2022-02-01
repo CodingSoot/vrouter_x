@@ -12,9 +12,9 @@ part 'data_route_info.dart';
 
 /// This is a route that requires some [RouteData] to be able to navigate to it.
 /// If the [RouteData] is not provided, then we are automatically redirected to
-/// another route (which you'll precise in `routeInfo`).
+/// another route (which you'll specify in `routeInfo`).
 ///
-/// Steps :
+/// ### Usage :
 ///
 /// 1. Create a Dataclass that extends [RouteData]
 /// 2. Create your route class that extends [VxDataRoute]
@@ -23,7 +23,7 @@ part 'data_route_info.dart';
 /// 4. Instead of overriding [buildRoutes], you should override [buildRoutesX]
 ///    and return your list of VRouteElements there.
 ///
-/// Example :
+/// ### Example :
 ///
 ///```dart
 /// @freezed
@@ -53,7 +53,7 @@ part 'data_route_info.dart';
 ///   List<VRouteElement> buildRoutesX() {
 ///     return [
 ///       VWidget(
-///         path: null,
+///         path: null, // This will match the path specified in [routeInfo]
 ///         widget: BookPage(),
 ///       ),
 ///     ];

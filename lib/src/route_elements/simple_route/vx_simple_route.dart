@@ -7,10 +7,15 @@ import 'package:vrouter_x/src/route_elements/simple_route/simple_route_info.dart
 /// This is a basic route, that contains some common information needed for
 /// navigation.
 ///
-/// The [routeInfoInstance] should be a reference to a static variable
-/// `routeInfo`, that you'll create in your route class.
+/// ### Usage :
 ///
-/// Example :
+/// 1. Create your route class that extends [VxSimpleRoute]
+/// 2. The [routeInfoInstance] should be a reference to a static variable
+/// `routeInfo`, that you'll create in your route class.
+/// 3. Instead of overriding [buildRoutes], you should override [buildRoutesX]
+///    and return your list of VRouteElements there.
+///
+/// ### Example :
 ///
 /// ```dart
 /// class ProfileRoute extends VxSimpleRoute {
@@ -26,8 +31,13 @@ import 'package:vrouter_x/src/route_elements/simple_route/simple_route_info.dart
 ///   );
 ///
 ///   @override
-///   List<VRouteElement> buildRoutes() {
-///     ...
+///   List<VRouteElement> buildRoutesX() {
+///     return [
+///          VWidget(
+///            path: null, // This will match the path specified in [routeInfo]
+///            widget: ProfilePage(),
+///          ),
+///        ];
 ///   }
 /// }
 /// ```
