@@ -98,9 +98,13 @@ class PathWidgetSwitcher extends StatelessWidget {
     // Last resort, we sort by the number of path segments first, and then by
     // the length of the path.
     matches.sort((a, b) {
-      // We make sure '*' gets sorted after something like '/'
+      // Wildcard paths '*' should be last in the list, and sorted according to
+      // their original order
       if (b.path == '*') {
         return -1;
+      }
+      if (a.path == '*') {
+        return 1;
       }
 
       final firstComparison =
@@ -122,11 +126,10 @@ class PathWidgetSwitcher extends StatelessWidget {
     final pathWidgetOption = findPathWidget(vRouterData);
 
     final child = pathWidgetOption.match(
-      (pathWidget) => pathWidget.builder(),
+      (pathWidget) => pathWidget.builder(pathWidget.path),
       () => throw UnknownPathWidgetError(path: vRouterData.path ?? ''),
     );
 
-    //TODO keys
     return AnimatedSwitcher(
       duration: duration,
       child: child,
