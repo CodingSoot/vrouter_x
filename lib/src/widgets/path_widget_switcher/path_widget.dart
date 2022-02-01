@@ -13,7 +13,11 @@ class PathWidget {
         );
 
   final String path;
-  final Widget Function() builder;
+
+  /// The widget builder.
+  ///
+  /// NB : The [path] is passed-in in this builder for easy use as a ValueKey.
+  final Widget Function(String path) builder;
   final bool prefix;
 
   /// Whether to treat paths as case sensitive or not. If specified, it
@@ -26,7 +30,7 @@ class PathWidget {
 
   PathWidget copyWith({
     String? path,
-    Widget Function()? builder,
+    Widget Function(String path)? builder,
     bool? prefix,
     bool? caseSensitive,
   }) {
