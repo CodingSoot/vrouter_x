@@ -1,3 +1,4 @@
+import 'package:example/main2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -58,37 +59,138 @@ class MyApp extends ConsumerWidget {
               ],
               tabsScaffoldBuilder:
                   (context, state, body, currentIndex, onTabPressed) =>
-                      Scaffold(
+                      MyScaffold(
                 body: body,
-                floatingActionButton: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FloatingActionButton(
-                      onPressed: () =>
-                          PlusRoute.routeInfo.navigate(context.vRouter),
-                    ),
-                    FloatingActionButton(
-                      onPressed: () =>
-                          PurpleRoute.routeInfo.navigate(context.vRouter),
-                    ),
-                  ],
-                ),
-                bottomNavigationBar: BottomNavigationBar(
-                  currentIndex: currentIndex,
-                  onTap: onTabPressed,
-                  items: const [
-                    BottomNavigationBarItem(
-                        icon: Icon(Icons.home), label: 'Home'),
-                    BottomNavigationBarItem(
-                        icon: Icon(Icons.settings), label: 'Profile'),
-                  ],
-                ),
+                currentIndex: currentIndex,
+                onTabPressed: onTabPressed,
               ),
               stackedScaffoldBuilder: (context, state, body) =>
                   Scaffold(body: body),
             )
           ],
         )
+      ],
+    );
+  }
+}
+
+class MyScaffold extends StatelessWidget {
+  const MyScaffold({
+    Key? key,
+    required this.body,
+    required this.currentIndex,
+    required this.onTabPressed,
+  }) : super(key: key);
+
+  final int currentIndex;
+  final void Function(int)? onTabPressed;
+  final Widget body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: body,
+      appBar: PfPathWidgetSwitcher(
+        duration: const Duration(milliseconds: 500),
+        pathWidgets: [
+          PathWidget(
+            path: MainRoute.routeInfo.path!,
+            builder: (path) => AppBar(
+              key: ValueKey(path),
+              backgroundColor: Colors.indigo,
+              title: const Text('Main'),
+            ),
+            prefix: false,
+          ),
+          PathWidget(
+            path: ProfileRoute.routeInfo.path!,
+            builder: (path) => AppBar(
+              key: ValueKey(path),
+              backgroundColor: Colors.teal,
+              title: const Text('Profile'),
+            ),
+            prefix: false,
+          ),
+          PathWidget(
+            path: '*',
+            builder: (path) => AppBar(
+              key: ValueKey(path),
+              backgroundColor: Colors.purpleAccent,
+              title: const Text('Other'),
+            ),
+            prefix: false,
+          ),
+        ],
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+      floatingActionButton: PathWidgetSwitcher(
+        duration: const Duration(milliseconds: 500),
+        pathWidgets: [
+          PathWidget(
+            path: MainRoute.routeInfo.path!,
+            builder: (path) => MyFAB(
+              key: ValueKey(path),
+              color: Colors.indigo,
+            ),
+            prefix: false,
+          ),
+          PathWidget(
+            path: ProfileRoute.routeInfo.path!,
+            builder: (path) => MyFAB(
+              key: ValueKey(path),
+              color: Colors.teal,
+            ),
+            prefix: false,
+          ),
+          PathWidget(
+            path: '*',
+            builder: (path) => MyFAB(
+              key: ValueKey(path),
+              color: Colors.purpleAccent,
+            ),
+            prefix: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  BottomNavigationBar _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      currentIndex: currentIndex,
+      onTap: onTabPressed,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Profile'),
+      ],
+    );
+  }
+}
+
+class MyFAB extends StatelessWidget {
+  const MyFAB({
+    Key? key,
+    required this.color,
+  }) : super(key: key);
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton(
+          backgroundColor: color,
+          child: const Text('Plus'),
+          onPressed: () => PlusRoute.routeInfo.navigate(context.vRouter),
+        ),
+        const SizedBox(height: 20.0),
+        FloatingActionButton(
+          backgroundColor: color,
+          child: const Text('Purple'),
+          onPressed: () => PurpleRoute.routeInfo.navigate(context.vRouter),
+        ),
       ],
     );
   }
