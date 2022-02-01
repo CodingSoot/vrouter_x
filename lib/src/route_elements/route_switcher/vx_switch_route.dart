@@ -2,13 +2,15 @@ part of 'vx_route_switcher.dart';
 
 /// This is a route intended to be used with [VxRouteSwitcher].
 ///
-/// The [routeInfoInstance] should be a reference to a static variable
-/// `routeInfo`, that you'll create in your route class.
+/// ### Usage :
 ///
-/// Then, instead of overriding [buildRoutes], you should override
+/// 1. Create your route class that extends [VxSwitchRoute]
+/// 2. The [routeInfoInstance] should be a reference to a static variable
+/// `routeInfo`, that you'll create in your route class.
+/// 3. Instead of overriding [buildRoutes], you should override
 /// [buildRoutesX] and return your list of VRouteElements there.
 ///
-/// Example :
+/// ### Example :
 ///
 /// ```dart
 /// class ProfileRoute extends VxSwitchRoute<ProfileRouteData> {
@@ -57,15 +59,29 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
           BuildContext context, VRouterData vRouterData, Widget child)
       widgetBuilder;
 
-  /// See [VxRouteSwitcher.isMainSwitchRoute]
+  /// Whether the "main redirection" is enabled in the parent [VxRouteSwitcher].
   ///
-  /// This will be initialized by the parent [VxRouteSwitcher]
-  late final bool isMainSwitchRoute;
+  /// ⚠️ When this is true, both [isMainSwitchRoute] and [redirectToQueryParam]
+  /// are not null. Otherwise, both are null.
+  ///
+  /// NB: This will be initialized by the parent [VxRouteSwitcher].
+  late final bool isMainRedirectionEnabled;
 
-  /// See [VxRouteSwitcher.redirectToQueryParam]
+  /// Whether this switchRoute is the mainSwitchRoute. True if this
+  /// switchRoute's name equals the parent's
+  /// [VxRouteSwitcher.mainSwitchRouteName].
   ///
-  /// This will be initialized by the parent [VxRouteSwitcher]
-  late final String redirectToQueryParam;
+  /// Non null if [isMainRedirectionEnabled] is true (and null otherwise).
+  ///
+  /// NB: This will be initialized by the parent [VxRouteSwitcher].
+  late final bool? isMainSwitchRoute;
+
+  /// Equals the parent's [VxRouteSwitcher.redirectToQueryParam].
+  ///
+  /// Non null if [isMainRedirectionEnabled] is true (and null otherwise).
+  ///
+  /// NB: This will be initialized by the parent [VxRouteSwitcher].
+  late final String? redirectToQueryParam;
 
   /// Called after switching to this route.
   ///
@@ -79,11 +95,22 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
 
   static Future<void> _voidAfter() async {}
 
-  /// This persists the "redirectTo" query parameter when navigating between the
-  /// routes of this [VxSwitchRoute]
+  /// When the "main redirection" is enabled, this will persist the "redirectTo"
+  /// query parameter when navigating between the routes of this [VxSwitchRoute]
   Future<void> _beforeUpdate(VRedirector vRedirector) async {
+    /// The "main redirection" isn't enabled.
+    if (!isMainRedirectionEnabled) {
+      return;
+    }
+
+    /// [isMainRedirectionEnabled] is true, so both [isMainSwitchRoute]
+    /// and [redirectToQueryParam] are not null.
+    final isMainSwitchRoute = this.isMainSwitchRoute!;
+    final redirectToQueryParam = this.redirectToQueryParam!;
+
     /// If this [VxSwitchRoute] is the main switchRoute, we obviously don't want
-    /// to persist the "redirectTo" query parameter.
+    /// to persist the "redirectTo" query parameter. (would cause an infinite
+    /// redirection loop)
     if (isMainSwitchRoute) {
       return;
     }

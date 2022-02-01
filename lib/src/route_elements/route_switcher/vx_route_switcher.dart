@@ -28,6 +28,52 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     required this.switchRoutes,
     required this.provider,
     required this.mapStateToSwitchRoute,
+    this.transitionDuration,
+    this.reverseTransitionDuration,
+    this.buildTransition,
+    this.key,
+    this.name,
+    this.aliases = const [],
+    this.navigatorKey,
+    this.fullscreenDialog = false,
+  })  : isMainRedirectionEnabled = false,
+        mainSwitchRouteName = null,
+        redirectToQueryParam = null,
+        assert(
+            switchRoutes
+                    .map((route) => route.routeInfoInstance.name)
+                    .toSet()
+                    .length ==
+                switchRoutes.length,
+            "The switchRoutes should have unique names.") {
+    /// Initializing the late final class members
+    /// [VxSwitchRoute.isMainSwitchRoute] and
+    /// [VxSwitchRoute.redirectToQueryParam]
+    for (final switchRoute in switchRoutes) {
+      switchRoute.isMainRedirectionEnabled = false;
+      switchRoute.isMainSwitchRoute = null;
+      switchRoute.redirectToQueryParam = null;
+    }
+  }
+
+  /// Use this constructor when you want to enable "Main redirection".
+  ///
+  /// ### What is "main redirection" ?
+  ///
+  /// When you navigate to a **url** that points to a route inside your main
+  /// switchRoute, but the matched switchRoute is not the main switchRoute, you
+  /// are redirected to the matched switchRoute.
+  ///
+  /// In this situation, that **url** is stored inside the "redirectTo" query
+  /// parameter, which will be persisted until the state matches your main
+  /// switchRoute. When that happens, you are automatically navigated to that
+  /// **url**, and the "redirectTo" query parameter is deleted.
+  VxRouteSwitcher.withMainRedirection(
+    this.routeRef, {
+    required this.path,
+    required this.switchRoutes,
+    required this.provider,
+    required this.mapStateToSwitchRoute,
     required this.mainSwitchRouteName,
     required this.redirectToQueryParam,
     this.transitionDuration,
@@ -38,47 +84,56 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     this.aliases = const [],
     this.navigatorKey,
     this.fullscreenDialog = false,
-  })  : assert(
+  })  : isMainRedirectionEnabled = true,
+        assert(
+            mainSwitchRouteName != null && redirectToQueryParam != null,
+            "mainSwitchRouteName and redirectToQueryParam should not be null "
+            "when using VxRouteSwitcher.withMainRedirection."),
+        assert(
+            switchRoutes
+                .map((route) => route.routeInfoInstance.name)
+                .contains(mainSwitchRouteName),
+            "The mainSwitchRouteName should be the name of a switchRoute."),
+        assert(
             switchRoutes
                     .map((route) => route.routeInfoInstance.name)
                     .toSet()
                     .length ==
                 switchRoutes.length,
-            "The switchRoutes should have unique names."),
-        assert(
-            switchRoutes
-                .map((route) => route.routeInfoInstance.name)
-                .contains(mainSwitchRouteName),
-            "The mainSwitchRouteName should be the name of a switchRoute.") {
+            "The switchRoutes should have unique names.") {
     /// Initializing the late final class members
+    /// [VxSwitchRoute.isMainRedirectionEnabled],
     /// [VxSwitchRoute.isMainSwitchRoute] and
     /// [VxSwitchRoute.redirectToQueryParam]
+    ///
     for (final switchRoute in switchRoutes) {
+      switchRoute.isMainRedirectionEnabled = true;
       switchRoute.isMainSwitchRoute =
           switchRoute.routeInfoInstance.name == mainSwitchRouteName;
       switchRoute.redirectToQueryParam = redirectToQueryParam;
     }
   }
 
-  /// This is the name of your main switchRoute.
+  /// Whether the "main redirection" is enabled.
   ///
-  /// When you navigate to a **url** that points to a route inside your main
-  /// switchRoute, but the matched switchRoute is not the main switchRoute, you
-  /// are redirected to the matched switchRoute.
+  /// ⚠️ When this is true, both [mainSwitchRouteName] and
+  /// [redirectToQueryParam] are not null. Otherwise, both are null.
   ///
-  /// In this situation, that **url** is stored inside the "redirectTo" query
-  /// parameter, which will be persisted until the state matches your main
-  /// switchRoute. When that happens, you are automatically navigated to that
-  /// **url**, and the "redirectTo" query parameter is deleted.
-  ///
-  final String mainSwitchRouteName;
+  final bool isMainRedirectionEnabled;
 
-  /// The name of the "redirectTo" query parameter.
+  /// This is the name of your main switchRoute, used for "main redirection".
   ///
-  /// See [mainSwitchRouteName]
-  final String redirectToQueryParam;
+  /// Not null if [isMainRedirectionEnabled] is true (null otherwise).
+  final String? mainSwitchRouteName;
 
-  final RouteRef routeRef;
+  /// The name of the "redirectTo" query parameter, used for "main redirection".
+  ///
+  /// Not null if [isMainRedirectionEnabled] is true (null otherwise).
+  ///
+  /// NB : When having two nested `VxRouteSwitcher`s in the route-tree which
+  /// both have "main redirection" enabled, they should have a different
+  /// "redirecTo" query parameters.
+  final String? redirectToQueryParam;
 
   /// The provider you want to listen to.
   final ProviderBase<T> provider;
@@ -130,6 +185,8 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
 
   /// The list of routes you want to automatically switch between.
   final List<VxSwitchRoute> switchRoutes;
+
+  final RouteRef routeRef;
 
   /// See [VNester.path]
   final String? path;
@@ -207,8 +264,8 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
       pathParameters: matchedRouteDetails.pathParameters,
       queryParameters: {
         ...matchedRouteDetails.queryParameters,
-        if (redirectToQueryParamValue != null)
-          redirectToQueryParam: redirectToQueryParamValue,
+        if (isMainRedirectionEnabled && redirectToQueryParamValue != null)
+          redirectToQueryParam!: redirectToQueryParamValue,
       },
       historyState: matchedRouteDetails.historyState,
       hash: matchedRouteDetails.hash,
@@ -226,7 +283,7 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
   ///    contained in `matchedRouteDetails`)
   ///
   /// ---
-  /// For the "redirectTo" query parameter :
+  /// For the "redirectTo" query parameter (When mainNavigation is enabled) :
   /// - If shouldRedirect == true :
   ///   - (A) If we are redirecting from a main switchRoute to another
   ///     switchRoute : We encode the previousUrl in the redirectTo query
@@ -258,14 +315,15 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
 
     /// 2.
     if (shouldRedirect) {
-      final redirectTo =
-          (newSwitchRoute.routeInfoInstance.name == mainSwitchRouteName)
+      final redirectTo = isMainRedirectionEnabled
+          ? (newSwitchRoute.routeInfoInstance.name == mainSwitchRouteName)
               ?
               // A
               Uri.encodeQueryComponent(newVRouterData.url!)
               :
               // B
-              newVRouterData.queryParameters[redirectToQueryParam];
+              newVRouterData.queryParameters[redirectToQueryParam]
+          : null;
 
       _navigate(
         debugSource: '_beforeEnterAndUpdate (1)',
@@ -294,7 +352,8 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     }
 
     // C
-    if (newSwitchRoute.routeInfoInstance.name == mainSwitchRouteName) {
+    if (isMainRedirectionEnabled &&
+        newSwitchRoute.routeInfoInstance.name == mainSwitchRouteName) {
       final redirectTo = newVRouterData.queryParameters[redirectToQueryParam];
       if (redirectTo == null) {
         return;
@@ -374,8 +433,9 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
         debugSource: '_onStateChanged (2)',
         vRouterNavigator: context.vRouter,
         matchedRouteDetails: matchedRouteDetails,
-        redirectToQueryParamValue:
-            context.vRouter.queryParameters[redirectToQueryParam],
+        redirectToQueryParamValue: isMainRedirectionEnabled
+            ? context.vRouter.queryParameters[redirectToQueryParam]
+            : null,
       );
 
       /// Not awaiting this on purpose.
