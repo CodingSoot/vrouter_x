@@ -122,7 +122,7 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       initialUrl: '/plus/initial',
       routes: [
-        VxRouteSwitcher<MyState>(
+        VxRouteSwitcher<MyState>.withMainRedirection(
           routeRef,
           path: '/',
           switchRoutes: [
