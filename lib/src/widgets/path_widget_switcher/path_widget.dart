@@ -12,6 +12,10 @@ class PathWidget {
           "The path should be absolute, or be equal to the wildcard '*'.",
         );
 
+  /// The path to match.
+  ///
+  /// It should be absolute (should start with a '/'), or be equal to the
+  /// wildcard '*'.
   final String path;
 
   /// The widget builder.
