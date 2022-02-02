@@ -164,18 +164,18 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
   /// such as the path parameters, query parameters... which will be passed to
   /// the [VRouterNavigator.toNamed] method during navigation.
   ///
-  /// [vRouterData] is the vRouterData of the route before switching (=
-  /// automatically navigating) to the matched switchRoute. It can be useful for
-  /// extracting pathParameters.
+  /// The passed `vRouterData` is the vRouterData of the route before switching
+  /// (= automatically navigating) to the matched switchRoute. It can be useful
+  /// for extracting pathParameters.
   ///
   /// Example :
   ///
   /// ```dart
-  /// mapStateToSwitchRoute: (state, previousVRouterData) => state.match(
+  /// mapStateToSwitchRoute: (state, vRouterData) => state.match(
   ///       (username) => MatchedRouteDetails(
   ///             switchRouteName: ProfileRoute.routeInfo.name,
   ///             routeData: ProfileRouteData(username: username),
-  ///             pathParameters: VxUtils.extractPathParamsFromVRouterData(previousVRouterData, ['id'])
+  ///             pathParameters: VxUtils.extractPathParamsFromVRouterData(vRouterData, ['id'])
   ///           ),
   ///       ...
   /// ```

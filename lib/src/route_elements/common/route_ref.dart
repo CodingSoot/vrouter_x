@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Simple wrapper for the different possible riverpod refs, with only reading
 /// allowed.
-///
 
 class RouteRef {
   RouteRef.fromRef(Ref ref) : _reader = ref.read;
