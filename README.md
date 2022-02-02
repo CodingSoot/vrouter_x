@@ -263,7 +263,10 @@ You can easily access the routeInfo using `BookRoute.routeInfo`.
 
 To navigate, you can call : `BookRoute.routeInfo.navigate(...)`.
 
-You can read/watch the routeData provider `BookRoute.routeInfo.routeDataProvider` from any widget of the routes returned by `buildRoutesX`. However, if you access it from outside those routes, an `UnimplementedError` will be thrown.
+You can access the routeData in two different ways :
+
+- **If you are inside the route's tree :** Read/watch the provider `BookRoute.routeInfo.routeDataProvider`. You can do this safely from any widget of the routes returned by `buildRoutesX`. However, if you access it from outside of those, an `UnimplementedError` will be thrown.
+- **If you are outside the route's tree:** Read/watch the provider `BookRoute.routeInfo.routeDataOptionProvider`. This can be safely done from anywhere. This provider holds `none()` if the route is not in the current stack, otherwise it holds `some(routeData)`.
 
 ## VxSwitchRoute
 
@@ -316,7 +319,10 @@ All the features of `VxSimpleRoute` are included.
 
 You can easily access the routeInfo using `ProfileRoute.routeInfo`.
 
-You can read/watch the routeData provider `ProfileRoute.routeInfo.routeDataProvider` from any widget of the routes returned by `buildRoutesX`. However, if you access it from outside those routes, an `UnimplementedError` will be thrown.
+You can access the routeData in two different ways :
+
+- **If you are inside the route's tree :** Read/watch the provider `ProfileRoute.routeInfo.routeDataProvider`. You can do this safely from any widget of the routes returned by `buildRoutesX`. However, if you access it from outside of those, an `UnimplementedError` will be thrown.
+- **If you are outside the route's tree:** Read/watch the provider `ProfileRoute.routeInfo.routeDataOptionProvider`. This can be safely done from anywhere. This provider holds `none()` if the route is not in the current stack, otherwise it holds `some(routeData)`.
 
 ---
 
