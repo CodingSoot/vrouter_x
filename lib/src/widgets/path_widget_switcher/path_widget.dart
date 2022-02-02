@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:vrouter_x/src/widgets/path_widget_switcher/path_widget_switcher.dart';
 
 /// A path and associated widget builder.
 class PathWidget {
   PathWidget({
     required this.path,
     required this.builder,
-    this.prefix = true,
+    this.prefix = false,
     this.caseSensitive,
   }) : assert(
           path.startsWith('/') || path == '*',
@@ -22,6 +23,10 @@ class PathWidget {
   ///
   /// NB : The [path] is passed-in in this builder for easy use as a ValueKey.
   final Widget Function(String path) builder;
+
+  /// Whether to treat this path as a prefix.
+  ///
+  /// Defaults to `false`.
   final bool prefix;
 
   /// Whether to treat paths as case sensitive or not. If specified, it
@@ -30,7 +35,7 @@ class PathWidget {
 
   List<String> get pathSegments => Uri.tryParse(path)?.pathSegments ?? [];
 
-  PathWidget get exact => copyWith(prefix: false);
+  PathWidget get asPrefix => copyWith(prefix: true);
 
   PathWidget copyWith({
     String? path,

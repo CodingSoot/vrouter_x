@@ -377,20 +377,20 @@ Paths can be defined as simple strings like /user/new or user/:userId, or use re
 
 By default, paths are considered to be case-insensitive. This can be controlled globally by setting the `caseSensitive` property of `PathWidgetSwitcher`, which can be overridden on a per path basis by setting the `caseSensitive` property of `PathWidget`.
 
-By default, paths are also treated as prefixes, but this can be disabled using the `.exact` extension method, or setting the `prefix` property to `false`.
+If you want a path to be treated as a prefix, you can set the `prefix` property to `true` (false by default), or by using the `.asPrefix` extension method.
 
 ```dart
-// use '.exact' to match only '/'
+// This matches any path that starts with '/'
 PathWidget(
   path: '/',
   builder: (path) => const MainMenu(),
-).exact,
-// This is the same as using '.exact'
-PathWidget(
-  path: '/',
-  builder: (path) => const MainMenu(),
-  prefix: false,
+  prefix: true,
 ),
+// This is the same as 'prefix: true'
+PathWidget(
+  path: '/',
+  builder: (path) => const MainMenu(),
+).asPrefix,
 ```
 
 All the paths of the `PathWidget`s should be absolute (which means they should start with a `'/'`).
