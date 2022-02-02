@@ -445,7 +445,7 @@ This is why I settled on keeping the navigation synchroneous, and only having af
 
 It is still possible to make something like a switchingScreen, by structuring your VxSwitchRoute this way :
 
-```json
+```text
 VGuard : after Entering the switching screen, we wait a little before redirecting to a stackedRoute.
 |
 | _ VWidget : The switching screen
@@ -460,4 +460,93 @@ The advantages are that :
 
 # VsCode snippets
 
-TODO add snippets.
+```json
+"VxSimpleRoute": {
+  "prefix": "vxsimpleroute",
+  "body": [
+    "class ${1}Route extends VxSimpleRoute {",
+    "  ${1}Route(RouteRef routeRef)",
+    "    : super(",
+    "      routeInfoInstance: routeInfo,",
+    "      routeRef: routeRef,",
+    "     );",
+    "  ",
+    "  static final routeInfo = SimpleRouteInfo(",
+    "    path: ${2},",
+    "    name: ${3},",
+    "  );",
+    "",
+    "  @override",
+    "  List<VRouteElement> buildRoutesX() {",
+    "    return [",
+    "      ${4}",
+    "    ];",
+    "  }",
+    "}",
+  ],
+  "description": "VxSimpleRoute"
+},
+"RouteData": {
+  "prefix": "routedata",
+  "body": [
+    "@freezed",
+    "class ${1}RouteData extends RouteData with _$${1}RouteData {",
+    "  const factory ${1}RouteData(${2}) = _${1}RouteData;",
+    "}",
+
+  ],
+  "description": "RouteData"
+},
+"VxDataRoute": {
+  "prefix": "vxdataroute",
+  "body": [
+    "class ${1}Route extends VxDataRoute<${1}RouteData> {",
+    "  ${1}Route(RouteRef routeRef)",
+    "    : super(",
+    "        routeRef: routeRef,",
+    "        routeInfoInstance: routeInfo,",
+    "      );",
+    "",
+    "  static final routeInfo = DataRouteInfo<${1}RouteData>(",
+    "    path: ${2},",
+    "    name: ${3},",
+    "    redirectToRouteName: ${4},",
+    "    redirectToResolver: ${5},",
+    "  );",
+    "",
+    "  @override",
+    "  List<VRouteElement> buildRoutesX() {",
+    "    return [",
+    "      ${6}",
+    "    ];",
+    "  }",
+    "}",			  
+  ],
+  "description": "VxDataRoute"
+},
+"VxSwitchRoute": {
+  "prefix": "vxswitchroute",
+  "body": [
+    "class ${1}Route extends VxSwitchRoute<${1}RouteData> {",
+    "  ${1}Route(RouteRef routeRef)",
+    "    : super(",
+    "        routeInfoInstance: routeInfo,",
+    "        routeRef: routeRef,",
+    "      );",
+    "",
+    "  static final routeInfo = SwitchRouteInfo<${1}RouteData>(",
+    "    path: ${2},",
+    "    name: ${3},",
+    "  );",
+    "",
+    "  @override",
+    "  List<VRouteElement> buildRoutesX() {",
+    "    return [",
+    "      ${4}",
+    "    ];",
+    "  }",
+    "}",
+  ],
+  "description": "VxSwitchRoute"
+},
+```
