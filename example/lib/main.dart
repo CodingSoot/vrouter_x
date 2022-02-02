@@ -91,7 +91,6 @@ class MyScaffold extends StatelessWidget {
     return Scaffold(
       body: body,
       appBar: PfPathWidgetSwitcher(
-        duration: const Duration(milliseconds: 500),
         pathWidgets: [
           PathWidget(
             path: MainRoute.routeInfo.path!,
@@ -121,10 +120,13 @@ class MyScaffold extends StatelessWidget {
             prefix: false,
           ),
         ],
+        builder: (context, child) => AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          child: child,
+        ),
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
       floatingActionButton: PathWidgetSwitcher(
-        duration: const Duration(milliseconds: 500),
         pathWidgets: [
           PathWidget(
             path: MainRoute.routeInfo.path!,
@@ -151,6 +153,10 @@ class MyScaffold extends StatelessWidget {
             prefix: false,
           ),
         ],
+        builder: (context, child) => AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          child: child,
+        ),
       ),
     );
   }
