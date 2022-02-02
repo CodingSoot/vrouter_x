@@ -8,20 +8,25 @@ class DataRouteInfo<P extends RouteData> extends RouteInfoBase {
     required String name,
     required this.redirectToRouteName,
     required this.redirectToResolver,
-  }) : super(path: path, name: name) {
-    /// When this route's widget tree has been disposed, we reset the
-    /// [_routeDataOptionProvider] to none().
-    _widgetDisposedProvider = Provider.autoDispose<void>((ref) {
-      ref.onDispose(() {
-        ref.read(_routeDataOptionProvider.state).state = none();
-      });
-    });
-  }
+  }) : super(path: path, name: name);
 
   /// Provider for the routeData of this route. It is scoped to the
   /// [VxDataRoute]'s widget tree, so it should only be accessed from there.
   final routeDataProvider = Provider<P>((ref) {
     throw UnimplementedError();
+  });
+
+  /// Use this provider instead of [routeDataProvider] when you want to safely
+  /// access the routeData from outside this [VxDataRoute]'s widget tree.
+  ///
+  /// This is often the case when you have some scaffolding that is outside the
+  /// route and that needs to access the routeData.
+  ///
+  /// This provider holds `none()` if the route is not in the current stack,
+  /// otherwise it holds `some(routeData)`.
+  late final routeDataOptionProvider = Provider<Option<P>>((ref) {
+    final routeDataOption = ref.watch(_routeDataOptionProvider);
+    return routeDataOption;
   });
 
   /// The name of the route we redirect to if the routeData is not provided.
@@ -34,10 +39,19 @@ class DataRouteInfo<P extends RouteData> extends RouteInfoBase {
 
   /// This provider is used internally to watch whether this route's widget tree
   /// has been disposed.
-  late final AutoDisposeProvider<void> _widgetDisposedProvider;
+  ///
+  /// Whenever this route's widget tree is disposed, we reset the
+  /// [_routeDataOptionProvider] to none().
+  late final AutoDisposeProvider<void> _widgetDisposedProvider =
+      Provider.autoDispose<void>((ref) {
+    ref.onDispose(() {
+      ref.read(_routeDataOptionProvider.state).state = none();
+    });
+  });
 
-  /// This provider holds either none() if no routeData has been passed to
-  /// this route, or some(routeData).
+  /// This stateProvider is used internally to store the routeData of thie
+  /// route. It holds either `none()` if no routeData has been passed to this
+  /// route, otherwise it holds `some(routeData)`.
   final _routeDataOptionProvider = StateProvider<Option<P>>((ref) {
     return none();
   });
