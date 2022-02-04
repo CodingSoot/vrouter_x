@@ -61,7 +61,7 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
 
   /// Whether the "main redirection" is enabled in the parent [VxRouteSwitcher].
   ///
-  /// ⚠️ When this is true, both [isMainSwitchRoute] and [redirectToQueryParam]
+  /// ⚠️ When this is true, both [isMainSwitchRoute] and [_redirectToQueryParam]
   /// are not null. Otherwise, both are null.
   ///
   /// NB: This will be initialized by the parent [VxRouteSwitcher].
@@ -81,7 +81,7 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
   /// Non null if [isMainRedirectionEnabled] is true (and null otherwise).
   ///
   /// NB: This will be initialized by the parent [VxRouteSwitcher].
-  late final String? redirectToQueryParam;
+  late final String? _redirectToQueryParam;
 
   /// Called after switching to this route.
   ///
@@ -106,7 +106,7 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
     /// [isMainRedirectionEnabled] is true, so both [isMainSwitchRoute]
     /// and [redirectToQueryParam] are not null.
     final isMainSwitchRoute = this.isMainSwitchRoute!;
-    final redirectToQueryParam = this.redirectToQueryParam!;
+    final redirectToQueryParam = _redirectToQueryParam!;
 
     /// If this [VxSwitchRoute] is the main switchRoute, we obviously don't want
     /// to persist the "redirectTo" query parameter. (would cause an infinite
@@ -134,6 +134,10 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
           redirectToQueryParam: previousRedirectToQueryParam,
         },
       );
+      logger.i('''
+      Persisting the redirectToQueryParam "$redirectToQueryParam" in switchRoute "${routeInfoInstance.name}"
+      Updated url : ${updatedUri.toString()}
+      ''');
       vRedirector.to(updatedUri.toString());
     }
   }

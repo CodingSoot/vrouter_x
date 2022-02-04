@@ -52,7 +52,7 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     for (final switchRoute in switchRoutes) {
       switchRoute.isMainRedirectionEnabled = false;
       switchRoute.isMainSwitchRoute = null;
-      switchRoute.redirectToQueryParam = null;
+      switchRoute._redirectToQueryParam = null;
     }
   }
 
@@ -110,7 +110,7 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
       switchRoute.isMainRedirectionEnabled = true;
       switchRoute.isMainSwitchRoute =
           switchRoute.routeInfoInstance.name == mainSwitchRouteName;
-      switchRoute.redirectToQueryParam = redirectToQueryParam;
+      switchRoute._redirectToQueryParam = redirectToQueryParam;
     }
   }
 
@@ -370,7 +370,7 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
 
         vRedirector.to(redirectToUrl);
         logger.i('''
-        Redirecting to the url inside the "redirectTo" query parameter "$redirectToQueryParam".
+        Redirecting to the url inside the redirectToQueryParam "$redirectToQueryParam".
         Destination : $redirectToUrl
         ''');
       } on ArgumentError {
@@ -379,6 +379,26 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
         _handleInvalidRedirectToQueryParam(vRedirector, newVRouterData);
       }
     }
+  }
+
+  /// Can throw both ArgumentError and FormatException
+  ///
+  /// TODO use this method
+  String extractRedirectToUrl(String url) {
+    /// We verify if the decoded redirectTo url is valid.
+    /// This throws a [FormatException] if the url is invalid.
+    final parsedUrl = Uri.parse(url);
+
+    final redirectTo = parsedUrl.queryParameters[redirectToQueryParam];
+    if (redirectTo == null) {
+      return url;
+    }
+
+    /// This throws an [ArgumentError] if the queryParameter is not encoded
+    /// correctly.
+    final redirectToUrl = Uri.decodeQueryComponent(redirectTo);
+
+    return extractRedirectToUrl(redirectToUrl);
   }
 
   /// When the "redirectTo" query parameter is invalid, we remove it from the
