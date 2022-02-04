@@ -5,7 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:vrouter/vrouter.dart';
 import 'package:vrouter_x/vrouter_x.dart';
 
-part 'main2.freezed.dart';
+part 'main.freezed.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));

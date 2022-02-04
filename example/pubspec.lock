@@ -232,7 +232,7 @@ packages:
       name: fpdart
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.0.13"
+    version: "0.0.14"
   freezed:
     dependency: "direct dev"
     description:
@@ -587,7 +587,7 @@ packages:
       name: vrouter
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.2.0+18"
+    version: "1.2.0+21"
   vrouter_x:
     dependency: "direct main"
     description:
