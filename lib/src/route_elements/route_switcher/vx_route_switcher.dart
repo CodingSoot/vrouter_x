@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:vrouter/vrouter.dart';
 import 'package:vrouter_x/src/_core/logger.dart';
 import 'package:vrouter_x/src/route_elements/common/route_info_base.dart';
@@ -9,6 +10,7 @@ import 'package:vrouter_x/src/route_elements/common/vx_route_base.dart';
 import 'package:vrouter_x/src/route_elements/common/route_data.dart';
 import 'package:vrouter_x/src/route_elements/route_switcher/matched_route_details.dart';
 import 'package:vrouter_x/src/_core/errors.dart';
+import 'package:vrouter_x/src/route_elements/route_switcher/parent_route_switcher.dart';
 
 part 'switch_route_info.dart';
 part 'vx_switch_route.dart';
@@ -28,6 +30,7 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     required this.switchRoutes,
     required this.provider,
     required this.mapStateToSwitchRoute,
+    this.parentRouteSwitchers,
     this.transitionDuration,
     this.reverseTransitionDuration,
     this.buildTransition,
@@ -47,12 +50,11 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
                 switchRoutes.length,
             "The switchRoutes should have unique names.") {
     /// Initializing the late final class members
-    /// [VxSwitchRoute.isMainSwitchRoute] and
-    /// [VxSwitchRoute.redirectToQueryParam]
+    /// [VxSwitchRoute.isMainRedirectionEnabled] and
+    /// [VxSwitchRoute.isMainSwitchRoute]
     for (final switchRoute in switchRoutes) {
       switchRoute.isMainRedirectionEnabled = false;
       switchRoute.isMainSwitchRoute = null;
-      switchRoute._redirectToQueryParam = null;
     }
   }
 
@@ -76,6 +78,7 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     required this.mapStateToSwitchRoute,
     required this.mainSwitchRouteName,
     required this.redirectToQueryParam,
+    this.parentRouteSwitchers,
     this.transitionDuration,
     this.reverseTransitionDuration,
     this.buildTransition,
@@ -89,6 +92,8 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
             mainSwitchRouteName != null && redirectToQueryParam != null,
             "mainSwitchRouteName and redirectToQueryParam should not be null "
             "when using VxRouteSwitcher.withMainRedirection."),
+        assert(redirectToQueryParam!.startsWith(StickyQueryParam.prefix),
+            "The redirectToQueryParam must start with '${StickyQueryParam.prefix}'"),
         assert(
             switchRoutes
                 .map((route) => route.routeInfoInstance.name)
@@ -102,38 +107,14 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
                 switchRoutes.length,
             "The switchRoutes should have unique names.") {
     /// Initializing the late final class members
-    /// [VxSwitchRoute.isMainRedirectionEnabled],
-    /// [VxSwitchRoute.isMainSwitchRoute] and
-    /// [VxSwitchRoute.redirectToQueryParam]
-    ///
+    /// [VxSwitchRoute.isMainRedirectionEnabled] and
+    /// [VxSwitchRoute.isMainSwitchRoute]
     for (final switchRoute in switchRoutes) {
       switchRoute.isMainRedirectionEnabled = true;
       switchRoute.isMainSwitchRoute =
           switchRoute.routeInfoInstance.name == mainSwitchRouteName;
-      switchRoute._redirectToQueryParam = redirectToQueryParam;
     }
   }
-
-  /// Whether the "main redirection" is enabled.
-  ///
-  /// ⚠️ When this is true, both [mainSwitchRouteName] and
-  /// [redirectToQueryParam] are not null. Otherwise, both are null.
-  ///
-  final bool isMainRedirectionEnabled;
-
-  /// This is the name of your main switchRoute, used for "main redirection".
-  ///
-  /// Not null if [isMainRedirectionEnabled] is true (null otherwise).
-  final String? mainSwitchRouteName;
-
-  /// The name of the "redirectTo" query parameter, used for "main redirection".
-  ///
-  /// Not null if [isMainRedirectionEnabled] is true (null otherwise).
-  ///
-  /// NB : When having two nested `VxRouteSwitcher`s in the route-tree which
-  /// both have "main redirection" enabled, they should have a different
-  /// "redirecTo" query parameters.
-  final String? redirectToQueryParam;
 
   /// The provider you want to listen to.
   final ProviderBase<T> provider;
@@ -185,6 +166,52 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
 
   /// The list of routes you want to automatically switch between.
   final List<VxSwitchRoute> switchRoutes;
+
+  /// Whether the "main redirection" is enabled.
+  ///
+  /// ⚠️ When this is true, both [mainSwitchRouteName] and
+  /// [redirectToQueryParam] are not null. Otherwise, both are null.
+  ///
+  final bool isMainRedirectionEnabled;
+
+  /// This is the name of your main switchRoute, used for "main redirection".
+  ///
+  /// Not null if [isMainRedirectionEnabled] is true (null otherwise).
+  final String? mainSwitchRouteName;
+
+  /// The name of the "redirectTo" query parameter, used for "main redirection".
+  ///
+  /// Not null if [isMainRedirectionEnabled] is true (null otherwise).
+  ///
+  /// NB : When having two nested `VxRouteSwitcher`s in the route-tree which
+  /// both have "main redirection" enabled, they should have a different
+  /// "redirecTo" query parameters.
+  final String? redirectToQueryParam;
+
+  /// This should be provided if this [VxRouteSwitcher] is nested inside another
+  /// [VxRouteSwitcher].
+  ///
+  /// This list represents the parent VxRouteSwitcher(s), from top to bottom.
+  /// Each [ParentRouteSwitcher]
+  ///
+  ///
+  /// This serves two purposes :
+  /// - The child's provider won't be accessed unless the state of the parent
+  ///   [VxRouteSwitcher]s are matching the route containing the child
+  ///   [VxRouteSwitcher].
+  /// - The "_beforeEnterAndUpdate" redirection logic is dealt with at the right
+  ///   level.
+  ///
+  /// > NB: This is the result of an internal limitation of vrouter. It could
+  /// > have been avoided if there was a way to access the parent
+  /// > VxRouteSwitchers from within the child VxRouteSwitcher. But unlike the
+  /// > widget-tree, the route-tree doesn't have something like a BuildContext
+  /// > to access ancestors.
+  /// >
+  /// > So code duplication is to be expected (Especially for
+  /// > [ParentRouteSwitcher.isStateMatchingChild]).
+  ///
+  final List<ParentRouteSwitcher>? parentRouteSwitchers;
 
   final RouteRef routeRef;
 
@@ -241,13 +268,39 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     );
   }
 
-  /// Navigates to the switchRoute represented by [matchedRouteDetails], using the
-  /// provided [vRouterNavigator].
+  /// When the "redirectTo" query parameter is invalid, we flag it for deletion
+  /// and we navigate again.
+  void _handleInvalidRedirectToQueryParam(
+      VRedirector vRedirector, VRouterData newVRouterData) {
+    final invalidUri = Uri.parse(newVRouterData.url!);
+
+    //We flag for deletion the invalid redirect-to query param
+    final queryParams = Map<String, String>.from(invalidUri.queryParameters);
+    queryParams.update(
+        redirectToQueryParam!, (_) => StickyQueryParam.deleteFlag);
+
+    final validUri = invalidUri.replace(
+      queryParameters: queryParams,
+    );
+
+    logger.w('''
+    Invalid "redirectTo" query parameter "$redirectToQueryParam".
+    Value : ${newVRouterData.queryParameters[redirectToQueryParam]}
+    Redirecting to url : ${validUri.toString()}
+    ''');
+
+    vRedirector.to(validUri.toString());
+  }
+
+  /// Navigates to the switchRoute represented by [matchedRouteDetails], using
+  /// the provided [vRouterNavigator].
+  ///
+  /// The [stickyQueryParams] are kept during navigation.
   void _navigate({
-    required String debugSource,
     required VRouterNavigator vRouterNavigator,
     required MatchedRouteDetails<RouteData> matchedRouteDetails,
-    required String? redirectToQueryParamValue,
+    required Map<String, String> stickyQueryParams,
+    required String debugSource,
   }) {
     logger.i('''
     Navigating : $debugSource
@@ -257,51 +310,70 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     final matchedSwitchRoute =
         _getSwitchRouteFromName(matchedRouteDetails.switchRouteName);
 
+    /// The order of these spreads ensure that the stickyQueryParams will
+    /// overwrite any similar stickyQueryParam in the matchedRouteDetails.
+    final queryParameters = {
+      ...matchedRouteDetails.queryParameters,
+      ...stickyQueryParams,
+    };
+
     matchedSwitchRoute.routeInfoInstance._navigate(
       routeRef,
       vRouterNavigator,
       data: matchedRouteDetails.routeData,
       pathParameters: matchedRouteDetails.pathParameters,
-      queryParameters: {
-        ...matchedRouteDetails.queryParameters,
-        if (isMainRedirectionEnabled && redirectToQueryParamValue != null)
-          redirectToQueryParam!: redirectToQueryParamValue,
-      },
+      queryParameters: queryParameters,
       historyState: matchedRouteDetails.historyState,
       hash: matchedRouteDetails.hash,
       isReplacement: matchedRouteDetails.isReplacement,
     );
   }
 
+  bool _canProceed() {
+    final parentRouteSwitchers = this.parentRouteSwitchers;
+    if (parentRouteSwitchers == null) {
+      return true;
+    }
+
+    for (final parent in parentRouteSwitchers) {
+      if (!parent.isStateMatchingChild(routeRef)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /// BeforeEnter and BeforeUpdate :
   ///
   /// 1. We verify if the switchRoute we want to access is the matched
   ///    switchRoute
-  /// 2. If no : We redirect to the matched switchRoute.
-  /// 3. If yes : We verify if routeData is missing. If so, we call
-  ///    [VxSwitchRoute._setRouteData] to set the missing routeData (that is
-  ///    contained in `matchedRouteDetails`)
+  /// 2. If no (shouldRedirect == true) : We redirect to the matched
+  ///    switchRoute. Note that :
+  ///    - (2a) The sticky query parameters are persisted.
+  ///    - (2b) If "main redirection" is enabled, and we are redirecting from a
+  ///       main switchRoute to another switchRoute : We store the previousUrl
+  ///       in the redirectTo query parameter
+  /// 3. If yes (shouldRedirect == false) :
+  ///    - (3a) We verify if routeData is missing. If so, we call
+  ///      [VxSwitchRoute._setRouteData] to set the missing routeData (that is
+  ///      contained in `matchedRouteDetails`)
+  ///    - (3b) If "main redirection" is enabled, and we are entering the main
+  ///      switchRoute, we check if the redirectTo query parameter contains any
+  ///      url. If yes, we navigate to it, and we set the query parameter's
+  ///      value to [StickyQueryParam.deleteFlag]. It will later be removed by TODO
   ///
-  /// ---
-  /// For the "redirectTo" query parameter (When mainNavigation is enabled) :
-  /// - If shouldRedirect == true :
-  ///   - (A) If we are redirecting from a main switchRoute to another
-  ///     switchRoute : We encode the previousUrl in the redirectTo query
-  ///     parameter
-  ///   - (B) If we are redirecting from a switchRoute to another one or to a
-  ///     main switchRoute : We pass the same redirectTo query parameter
-  /// - Else :
-  ///   - (C) If we are entering the main switchRoute, we navigate to the
-  ///     "redirect-to" url, and we delete the query-parameter
-  ///
-  /// ---
   /// NB: You can encode a string multiple times with the percent encoding and
   /// get the original value by decoding it the same amount of times. So there's
   /// nothing to worry about here. (Source :
   /// https://stackoverflow.com/a/2433211/13297133)
   ///
+  /// NB no need to encode/decode, it is automatically done
 
   Future<void> _beforeEnterAndUpdate(VRedirector vRedirector) async {
+    if (!_canProceed()) {
+      return;
+    }
+
     /// 1.
     final newVRouterData = vRedirector.newVRouterData!;
     final newSwitchRoute = _getSwitchRouteFromVRouterData(newVRouterData);
@@ -315,21 +387,40 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
 
     /// 2.
     if (shouldRedirect) {
-      final redirectTo = isMainRedirectionEnabled
-          ? (newSwitchRoute.routeInfoInstance.name == mainSwitchRouteName)
-              ?
-              // A
-              Uri.encodeQueryComponent(newVRouterData.url!)
-              :
-              // B
-              newVRouterData.queryParameters[redirectToQueryParam]
+      /// (2b)
+      final newVRouterDataUri = Uri.parse(newVRouterData.url!);
+
+      final redirectToUrl = (isMainRedirectionEnabled &&
+              newSwitchRoute.routeInfoInstance.name == mainSwitchRouteName)
+          ? StickyQueryParam.removeStickyQueryParams(newVRouterDataUri)
+              .toString()
           : null;
+
+      /// (2a)
+      final stickyQueryParams =
+          StickyQueryParam.getStickyQueryParams(newVRouterData.queryParameters);
+
+      if (redirectToUrl != null) {
+        stickyQueryParams.update(
+          redirectToQueryParam!,
+          (_) => redirectToUrl,
+          ifAbsent: () => redirectToUrl,
+        );
+      }
+
+      print('''
+      url : ${newVRouterData.url}
+      newSwitchRouteName : ${newSwitchRoute.routeInfoInstance.name}
+      mainSwitchRouteName : $mainSwitchRouteName
+      sticky query params : $stickyQueryParams
+      redirectTo : $redirectToUrl
+      ''');
 
       _navigate(
         debugSource: '_beforeEnterAndUpdate (1)',
         vRouterNavigator: vRedirector,
         matchedRouteDetails: matchedRouteDetails,
-        redirectToQueryParamValue: redirectTo,
+        stickyQueryParams: stickyQueryParams,
       );
 
       /// Not awaiting this on purpose.
@@ -340,6 +431,7 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
 
     /// 3.
 
+    /// (3a)
     final routeDataOption = routeRef
         .read(newSwitchRoute.routeInfoInstance._routeDataOptionProvider);
 
@@ -348,80 +440,55 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
         routeRef,
         data: matchedRouteDetails.routeData,
       );
-      return;
     }
 
-    // C
+    /// (3b)
     if (isMainRedirectionEnabled &&
         newSwitchRoute.routeInfoInstance.name == mainSwitchRouteName) {
-      final redirectTo = newVRouterData.queryParameters[redirectToQueryParam];
-      if (redirectTo == null) {
+      final redirectToUrl =
+          newVRouterData.queryParameters[redirectToQueryParam];
+      if (redirectToUrl == null) {
         return;
       }
 
-      try {
-        /// This throws an [ArgumentError] if the queryParameter is not encoded
-        /// correctly.
-        final redirectToUrl = Uri.decodeQueryComponent(redirectTo);
-
-        /// We verify if the decoded redirectTo url is valid.
-        /// This throws a [FormatException] if the url is invalid.
-        Uri.parse(redirectToUrl);
-
-        vRedirector.to(redirectToUrl);
-        logger.i('''
-        Redirecting to the url inside the redirectToQueryParam "$redirectToQueryParam".
-        Destination : $redirectToUrl
-        ''');
-      } on ArgumentError {
-        _handleInvalidRedirectToQueryParam(vRedirector, newVRouterData);
-      } on FormatException {
-        _handleInvalidRedirectToQueryParam(vRedirector, newVRouterData);
+      if (redirectToUrl == StickyQueryParam.deleteFlag) {
+        return;
       }
+
+      /// We ensure that the redirectToUrl is valid.
+      ///
+      /// This will be null if the url is invalid.
+      final redirectToUri = Uri.tryParse(redirectToUrl);
+
+      if (redirectToUri == null) {
+        _handleInvalidRedirectToQueryParam(vRedirector, newVRouterData);
+        return;
+      }
+
+      /// We only keep the normal queryParameters of the redirectToUri
+      final redirectToUriQueryParams =
+          StickyQueryParam.getNormalQueryParams(redirectToUri.queryParameters);
+
+      /// We flag the [redirectToQueryParam] for deletion, while keeping
+      /// the other sticky query parameters.
+      final stickyQueryParams =
+          StickyQueryParam.getStickyQueryParams(newVRouterData.queryParameters);
+
+      stickyQueryParams.update(
+        redirectToQueryParam!,
+        (_) => StickyQueryParam.deleteFlag,
+      );
+
+      final uri = redirectToUri.replace(
+        queryParameters: {...redirectToUriQueryParams, ...stickyQueryParams},
+      );
+
+      vRedirector.to(uri.toString());
+      logger.i('''
+        Redirecting to the url inside the redirectToQueryParam "$redirectToQueryParam".
+        Destination : ${uri.toString()}
+        ''');
     }
-  }
-
-  /// Can throw both ArgumentError and FormatException
-  ///
-  /// TODO use this method
-  String extractRedirectToUrl(String url) {
-    /// We verify if the decoded redirectTo url is valid.
-    /// This throws a [FormatException] if the url is invalid.
-    final parsedUrl = Uri.parse(url);
-
-    final redirectTo = parsedUrl.queryParameters[redirectToQueryParam];
-    if (redirectTo == null) {
-      return url;
-    }
-
-    /// This throws an [ArgumentError] if the queryParameter is not encoded
-    /// correctly.
-    final redirectToUrl = Uri.decodeQueryComponent(redirectTo);
-
-    return extractRedirectToUrl(redirectToUrl);
-  }
-
-  /// When the "redirectTo" query parameter is invalid, we remove it from the
-  /// url and navigate again.
-  void _handleInvalidRedirectToQueryParam(
-      VRedirector vRedirector, VRouterData newVRouterData) {
-    final invalidUri = Uri.parse(newVRouterData.url!);
-
-    //We remove the invalid redirect-to query param
-    final queryParams = Map<String, String>.from(invalidUri.queryParameters);
-    queryParams.remove(redirectToQueryParam);
-
-    final validUri = invalidUri.replace(
-      queryParameters: queryParams,
-    );
-
-    logger.w('''
-    Invalid "redirectTo" query parameter "$redirectToQueryParam".
-    Value : ${newVRouterData.queryParameters[redirectToQueryParam]}
-    Redirecting to url : ${validUri.toString()}
-    ''');
-
-    vRedirector.to(validUri.toString());
   }
 
   /// When we are inside a route, and the state changed :
@@ -448,14 +515,15 @@ class VxRouteSwitcher<T> extends VRouteElementBuilder {
     final shouldSwitch = currentSwitchRoute.routeInfoInstance.name !=
         matchedRouteDetails.switchRouteName;
 
+    final stickyQueryParams =
+        StickyQueryParam.getStickyQueryParams(context.vRouter.queryParameters);
+
     if (shouldSwitch) {
       _navigate(
         debugSource: '_onStateChanged (2)',
         vRouterNavigator: context.vRouter,
         matchedRouteDetails: matchedRouteDetails,
-        redirectToQueryParamValue: isMainRedirectionEnabled
-            ? context.vRouter.queryParameters[redirectToQueryParam]
-            : null,
+        stickyQueryParams: stickyQueryParams,
       );
 
       /// Not awaiting this on purpose.

@@ -76,13 +76,6 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
   /// NB: This will be initialized by the parent [VxRouteSwitcher].
   late final bool? isMainSwitchRoute;
 
-  /// Equals the parent's [VxRouteSwitcher.redirectToQueryParam].
-  ///
-  /// Non null if [isMainRedirectionEnabled] is true (and null otherwise).
-  ///
-  /// NB: This will be initialized by the parent [VxRouteSwitcher].
-  late final String? _redirectToQueryParam;
-
   /// Called after switching to this route.
   ///
   /// Defaults to [VxSwitchRoute._voidAfter].
@@ -95,58 +88,108 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
 
   static Future<void> _voidAfter() async {}
 
-  /// When the "main redirection" is enabled, this will persist the "redirectTo"
-  /// query parameter when navigating between the routes of this [VxSwitchRoute]
-  Future<void> _beforeUpdate(VRedirector vRedirector) async {
-    /// The "main redirection" isn't enabled.
-    if (!isMainRedirectionEnabled) {
-      return;
-    }
+  Future<void> _beforeEnterAndUpdate(VRedirector vRedirector) async {
+    // We persist all sticky query params, except those which value is [StickyQueryParam.deleteFlag]
 
-    /// [isMainRedirectionEnabled] is true, so both [isMainSwitchRoute]
-    /// and [redirectToQueryParam] are not null.
-    final isMainSwitchRoute = this.isMainSwitchRoute!;
-    final redirectToQueryParam = _redirectToQueryParam!;
-
-    /// If this [VxSwitchRoute] is the main switchRoute, we obviously don't want
-    /// to persist the "redirectTo" query parameter. (would cause an infinite
-    /// redirection loop)
-    if (isMainSwitchRoute) {
-      return;
-    }
-
-    final previousRedirectToQueryParam =
-        vRedirector.previousVRouterData?.queryParameters[redirectToQueryParam];
-
+    final previousVRouterData = vRedirector.previousVRouterData;
     final newVRouterData = vRedirector.newVRouterData!;
-    final newRedirectToQueryParam =
-        newVRouterData.queryParameters[redirectToQueryParam];
+
+    final previousStickyQueryParams = previousVRouterData != null
+        ? StickyQueryParam.getStickyQueryParams(
+            previousVRouterData.queryParameters)
+        : null;
+
+    final newStickyQueryParams =
+        StickyQueryParam.getStickyQueryParams(newVRouterData.queryParameters);
+
+    final queryParamsToPersist = previousStickyQueryParams != null
+        ? previousStickyQueryParams.filterWithKey((key, value) =>
+            value != StickyQueryParam.deleteFlag &&
+            !newStickyQueryParams.containsKey(key))
+        : {};
+
+    print('''
+    previousUrl : ${previousVRouterData?.url}
+    newUrl : ${newVRouterData.url}
+    queryParamsToPersist : $queryParamsToPersist
+    ''');
+
+    if (queryParamsToPersist.isEmpty) {
+      return;
+    }
 
     /// If the new url doesn't contain the "redirectTo" query parameter, while
     /// the previous url does, we add it to the query parameters of the new url
     /// and we redirect there.
-    if (newRedirectToQueryParam == null &&
-        previousRedirectToQueryParam != null) {
-      final uri = Uri.parse(newVRouterData.url!);
-      final updatedUri = uri.replace(
-        queryParameters: {
-          ...uri.queryParameters,
-          redirectToQueryParam: previousRedirectToQueryParam,
-        },
-      );
-      logger.i('''
-      Persisting the redirectToQueryParam "$redirectToQueryParam" in switchRoute "${routeInfoInstance.name}"
+
+    final uri = Uri.parse(newVRouterData.url!);
+
+    final updatedUri = uri.replace(
+      queryParameters: {
+        ...uri.queryParameters,
+        ...queryParamsToPersist,
+      },
+    );
+    logger.i('''
+      Persisting the queryParams "$queryParamsToPersist" in switchRoute "${routeInfoInstance.name}"
       Updated url : ${updatedUri.toString()}
       ''');
-      vRedirector.to(updatedUri.toString());
+    vRedirector.to(updatedUri.toString());
+  }
+
+  /// Cleaning the sticky query params which values equal
+  /// [StickyQueryParam.deleteFlag]
+  ///
+  /// This should be made afterEnter/Update so as not to conflict with the
+  /// persistance mechanism.
+  ///
+  ///
+  /// TODO try again to do the cleaning in beforeEnterAndUpdate. Just discovered
+  /// that I had a mistake in the code
+  Future<void> _afterEnterAndUpdate(
+      BuildContext context, String? from, String to) async {
+    final newUri = Uri.parse(to);
+
+    final newStickyQueryParams =
+        StickyQueryParam.getStickyQueryParams(newUri.queryParameters);
+
+    final queryParamsToClean = newStickyQueryParams
+        .filter((value) => value == StickyQueryParam.deleteFlag);
+
+    print('''
+    previousUrl : $from
+    newUrl : $to
+    queryParamsToClean : $queryParamsToClean
+    ''');
+
+    if (queryParamsToClean.isEmpty) {
+      return;
     }
+
+    final cleanedQueryParams = newUri.queryParameters
+        .filterWithKey((key, value) => !queryParamsToClean.containsKey(key));
+
+    final updatedUri = newUri.replace(
+      queryParameters: {
+        ...cleanedQueryParams,
+      },
+    );
+
+    logger.i('''
+      Cleaning the queryParams "$queryParamsToClean" in switchRoute "${routeInfoInstance.name}"
+      Updated url : ${updatedUri.toString()}
+      ''');
+    context.vRouter.to(updatedUri.toString());
   }
 
   @override
   List<VRouteElement> buildRoutes() {
     return [
       VGuard(
-        beforeUpdate: _beforeUpdate,
+        beforeEnter: _beforeEnterAndUpdate,
+        beforeUpdate: _beforeEnterAndUpdate,
+        afterEnter: _afterEnterAndUpdate,
+        afterUpdate: _afterEnterAndUpdate,
         stackedRoutes: [
           VNester.builder(
             path: routeInfoInstance.path,
