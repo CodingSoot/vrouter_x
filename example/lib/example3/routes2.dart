@@ -20,7 +20,7 @@ class A1Route extends VxSwitchRoute<A1RouteData> {
         );
 
   static final routeInfo = SwitchRouteInfo<A1RouteData>(
-    path: '/a1',
+    path: '/a1/:id',
     name: 'A1',
   );
 
@@ -48,7 +48,7 @@ class A2Route extends VxSwitchRoute<A2RouteData> {
         );
 
   static final routeInfo = SwitchRouteInfo<A2RouteData>(
-    path: '/a2',
+    path: '/a2/:id',
     name: 'A2',
   );
 
@@ -76,7 +76,7 @@ class A3Route extends VxSwitchRoute<A3RouteData> {
         );
 
   static final routeInfo = SwitchRouteInfo<A3RouteData>(
-    path: '/a3',
+    path: '/a3/:id',
     name: 'A3',
   );
 

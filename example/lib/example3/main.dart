@@ -9,6 +9,17 @@ import 'package:vrouter_x/vrouter_x.dart';
 
 part 'main.freezed.dart';
 
+/// .
+/// └── Switcher 1
+///     ├── (A) : Switcher 2
+///     │   ├── (A1)
+///     │   ├── (A2)
+///     │   └── (A3)
+///     ├── (B)
+///     └── (C) : Switcher 3
+///         ├── (C1)
+///         ├── (C2)
+///         └── (C3)
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -170,7 +181,7 @@ class MyApp extends ConsumerWidget {
 
     return VRouter(
       debugShowCheckedModeBanner: false,
-      initialUrl: A1Route.routeInfo.path!,
+      initialUrl: '/a1/init',
       routes: [
         MainRoute(routeRef),
       ],
@@ -220,7 +231,7 @@ class MainRoute extends VxSimpleRoute {
           ),
         ),
         mainSwitchRouteName: ARoute.routeInfo.name,
-        redirectToQueryParam: 'redirect-1',
+        redirectToQueryParam: '_redirect-1',
       ),
     ];
   }
