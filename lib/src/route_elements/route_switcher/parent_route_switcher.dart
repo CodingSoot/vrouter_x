@@ -23,34 +23,3 @@ class ParentRouteSwitcher<T> {
     return _isStateMatchingChild(state);
   }
 }
-
-/// TODO move somewhere
-class StickyQueryParam {
-  static const prefix = '_';
-
-  static const deleteFlag = '_';
-
-  static Map<String, String> getStickyQueryParams(
-      Map<String, String> queryParameters) {
-    return queryParameters
-        .filterWithKey((key, value) => key.startsWith(prefix));
-  }
-
-  static Map<String, String> getNormalQueryParams(
-      Map<String, String> queryParameters) {
-    return queryParameters
-        .filterWithKey((key, value) => !key.startsWith(prefix));
-  }
-
-  /// Returns the [uri] without the sticky query parameters.
-  static Uri removeStickyQueryParams(Uri uri) {
-    final normalQueryParams = uri.queryParameters.filterWithKey(
-        (key, value) => !key.startsWith(StickyQueryParam.prefix));
-
-    final result = uri.replace(
-      queryParameters: normalQueryParams,
-    );
-
-    return result;
-  }
-}
