@@ -3,9 +3,9 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:vrouter_x/vrouter_x.dart';
 import 'package:vrouter/vrouter.dart';
 
-import 'main.dart';
+import '../main.dart';
 
-part 'routes3.freezed.dart';
+part 'switcher3_routes.freezed.dart';
 
 @freezed
 class C1RouteData extends RouteData with _$C1RouteData {
