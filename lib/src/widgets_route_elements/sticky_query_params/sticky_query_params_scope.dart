@@ -1,10 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:vrouter/vrouter.dart';
 import 'package:vrouter_x/src/_core/logger.dart';
 import 'package:vrouter_x/src/widgets_route_elements/sticky_query_params/sticky_query_param.dart';
 import 'package:fpdart/fpdart.dart';
 
+/// This is a route element (a VGuard) that persists a set of query parameters
+/// in all its subroutes. This is a route element (a VGuard) that persists a set
+/// of query parameters in all its subroutes. These query parameters are called
+/// "Sticky query parameters".
+///
+/// When navigating inside the scope of [StickyQueryParamsScope], if you omit a
+/// sticky query parameter, it will be automatically re-added. If you want to
+/// remove the sticky query parameter from the url, you should set its value to
+/// the specified [StickyConfig.deleteFlag].
+///
+/// ### Example
+///
+/// ```dart
+/// StickyQueryParamsScope(
+///   stickyConfigs: [
+///     StickyConfig.exact(name: 'book-id', deleteFlag: '.'),
+///     StickyConfig.prefix(prefix: 'book', deleteFlag: '*'),
+///     StickyConfig.suffix(suffix: 'id'),
+///     StickyConfig.regExp(regExp: RegExp(r"\d+")),
+///   ],
+///   stackedRoutes: [
+///     ...
+///   ],
+/// );
+/// ```
+///
+/// In this example, the sticky query parameters that will be persisted are :
+///
+/// - The query parameter named 'book-id'. It can be removed from the url by
+///   setting its value to `.`.
+/// - All the query parameters which name starts with 'book'. Each one can be
+///   removed from the url by setting its value to `*`.
+/// - All the query parameters which name ends with 'id'. Each one can be
+///   removed from the url by setting its value to `_`, which is the default
+///   `deleteFlag`.
+/// - All the query parameters which name consists of digits only. Each one can
+///   be removed from the url by setting its value to `_`, which is the default
+///   `deleteFlag`.
 class StickyQueryParamsScope extends VRouteElementBuilder {
   StickyQueryParamsScope({
     required this.stickyConfigs,
@@ -14,6 +51,8 @@ class StickyQueryParamsScope extends VRouteElementBuilder {
   /// See [VRouteElement.buildRoutes]
   final List<VRouteElement> stackedRoutes;
 
+  /// A list of [StickyConfig]s that describe which query parameters to make
+  /// sticky.
   final List<StickyConfig> stickyConfigs;
 
   @override
@@ -29,12 +68,27 @@ class StickyQueryParamsScope extends VRouteElementBuilder {
     ];
   }
 
-  /// We persist all the sticky query params, except those that were flagged for
-  /// deletion (which have been or will be deleted in afterEnter/Update).
+  /// BeforeEnter/Update : Persisting phase
   ///
-  /// > NB : In beforeEnter/Update, when we redirect to a url, the new
-  /// > vRedirector gets the same old vRouterData. However, this doesn't cause
-  /// > any problem for persisting the the sticky queryParams.
+  /// We persist all the sticky query params that were present in the
+  /// previousVRouterData and :
+  /// - Are not present in the newVRouterData
+  /// - Are not flagged for deletion (These have been or will be deleted in
+  ///   afterEnter/Update).
+  ///
+  /// ### Important remark :
+  ///
+  /// In beforeEnter/Update, when we navigate using the vRedirector, the new
+  /// vRedirector gets the same old `previousVRouterData`. So if you add a
+  /// sticky query parameter in the middle of the beforeEnter/Update
+  /// rederections chain, it will not be automatically persisted because the
+  /// persistence relies on the queryParam to be present in the
+  /// `previousVRouterData`.
+  ///
+  /// For this reason, if you add new sticky queryParameters using a vRedirector
+  /// navigation, and you might have other subsequent vRedirector navigations
+  /// you might do, make sure to **manually** persist the added sticky
+  /// queryParams until the final page is **reached and accessed**.
   Future<void> _beforeEnterAndUpdate(VRedirector vRedirector) async {
     final previousVRouterData = vRedirector.previousVRouterData;
     final newVRouterData = vRedirector.newVRouterData!;
@@ -53,8 +107,9 @@ class StickyQueryParamsScope extends VRouteElementBuilder {
       });
     }
 
-    /// We persist the stickyQueryParams that were present in the previous
-    /// url and not in the new url, and that are were not flagged for deletion
+    /// We persist the stickyQueryParams that were present in the
+    /// previousVRouterData and not in the newVRouterData, and that were not
+    /// flagged for deletion
 
     final allQueryParamsToPersist = <String, String>{};
     for (final config in stickyConfigs) {
@@ -91,13 +146,22 @@ class StickyQueryParamsScope extends VRouteElementBuilder {
     vRedirector.to(updatedUri.toString());
   }
 
-  /// Deleting the sticky query params that are flagged for deletion (= which
+  /// AfterEnter/Update : Clean-up phase
+  ///
+  /// We delete the sticky query params that are flagged for deletion (= which
   /// value equals [StickyConfig.deleteFlag]).
   ///
-  /// > NB : In beforeEnter/Update, when we redirect to a url, the new
-  /// > vRedirector gets the same old vRouterData. For this reason, we can't
-  /// > delete the flagged sticky query params in beforeEnter/Update. Instead,
-  /// > we do this afterEnter/Update.
+  /// ### Important remark :
+  ///
+  /// In beforeEnter/Update, when we redirect to a url, the new
+  /// vRedirector gets the same old vRouterData. So if a query parameter is
+  /// marked for deletion in the middle of the beforeEnter/Update rederections
+  /// chain, and then deleted from within the same chain, it will be persisted
+  /// again, because the `previousVRouterData` would still hold the first
+  /// value of that query parameter.
+  ///
+  /// For this reason, we can't delete the flagged sticky query params in
+  /// beforeEnter/Update. Instead, we do this in afterEnter/Update.
   Future<void> _afterEnterAndUpdate(
       BuildContext context, String? from, String to) async {
     final newUri = Uri.parse(to);

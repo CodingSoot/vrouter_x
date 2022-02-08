@@ -27,14 +27,20 @@ This is a set of helpers for when using vRouter.
   - [VxTabBar](#vxtabbar)
     - [Keeping the tabs state](#keeping-the-tabs-state)
   - [VxRouteSwitcher](#vxrouteswitcher)
+    - [Nested VxRouteSwitchers](#nested-vxrouteswitchers)
     - [Main redirection](#main-redirection)
-    - [How it works](#how-it-works)
-  - [VxSimpleRoute](#vxsimpleroute)
+      - [How it works](#how-it-works)
+      - [The "redirect" query parameter](#the-redirect-query-parameter)
+      - [Nested VxRouteSwitcher & Main redirection](#nested-vxrouteswitcher--main-redirection)
+  - [StickyQueryParamsScope](#stickyqueryparamsscope)
     - [Usage](#usage)
-  - [VxDataRoute](#vxdataroute)
+    - [Limitations](#limitations)
+  - [VxSimpleRoute](#vxsimpleroute)
     - [Usage](#usage-1)
-  - [VxSwitchRoute](#vxswitchroute)
+  - [VxDataRoute](#vxdataroute)
     - [Usage](#usage-2)
+  - [VxSwitchRoute](#vxswitchroute)
+    - [Usage](#usage-3)
   - [PathWidgetSwitcher](#pathwidgetswitcher)
     - [Features](#features-1)
     - [Basic Usage](#basic-usage)
@@ -51,10 +57,11 @@ This is a set of helpers for when using vRouter.
 
 These VRouteElements are used directly inside the "route-tree".
 
-- **VxRouteSwitcher**
 - **VxTabsScaffold**
 - **VxTabBar** :
   - `useAutomaticKeepAlive` hook is provided for easily keeping the state of the tabs.
+- **VxRouteSwitcher**
+- **StickyQueryParamsScope**
 
 ## _Route elements :_
 
@@ -143,22 +150,116 @@ between its `switchRoutes` based on the state of a riverpod `provider`.
 - _Matched switchRoute :_ The switchRoute matching the current state of your provider
 - _Switching :_ Automatically navigating to the matched switchRoute when the state changes.
 
+### Nested VxRouteSwitchers
+
+When the `VxRouteSwitcher` is nested inside another `VxRouteSwitcher`, you should provide the `parentRouteSwitchers` argument. It's a list that represents the parent VxRouteSwitcher(s), from top to bottom.
+
+For example, if you have this route-tree :
+
+```text
+.
+└── Switcher 1
+    ├── Route A : Switcher 2
+    │   ├── Route i
+    │   └── Route ii : Switcher 3
+    │       ├── Route x
+    │       └── Route y
+    ├── Route B
+    └── Route C : Switcher 4
+        ├── Route α
+        └── Route β
+```
+
+Then you should provide the `parentRouteSwitchers` argument for `Switcher 2`, `Switcher 3` and `Switcher 4`.
+
+The `parentRouteSwitchers` of `Switcher 2` and `Switcher 4` will look like this :
+
+```dart
+parentRouteSwitchers: [
+      /// Represents Switcher 1
+      ParentRouteSwitcher(...),
+    ],
+```
+
+The `parentRouteSwitchers` of Switcher3 will look like this :
+
+```dart
+parentRouteSwitchers: [
+      /// Represents Switcher 1
+      ParentRouteSwitcher(...),
+      /// Represents Switcher 2
+      ParentRouteSwitcher(...),
+    ],
+```
+
 ### Main redirection
 
 Suppose you have a VxRouteSwitcher that switches between your main route and your "sign-in" route based on the authentication state. When the user navigates to a url that points to somewhere inside the main route, and he's not authenticated, he's redirected to the "sign-in" screen. Ideally, once he logs in, he would be redirected to that url. That's what "Main redirection" is about.
 
-### How it works
+#### How it works
 
 To enable "main redirection", you should use the constructor `VxRouteSwitcher.withMainRedirection`. Then you should provide two arguments :
 
 - `mainSwitchRouteName` : The name of your main switchRoute.
-- `redirectToQueryParam` : The name of the "redirectTo" query parameter.
+- `redirectQueryParamName` : The name of the "redirect" query parameter.
 
 When you navigate to a **url** that points to a route inside your main switchRoute, but the matched switchRoute is not the main switchRoute, you are redirected to the matched switchRoute.
 
-In this situation, that **url** is stored inside the "redirectTo" query parameter, which will be persisted until the state matches your main switchRoute. When that happens, you are automatically navigated to that **url**, and the "redirectTo" query parameter is deleted.
+In this situation, that **url** is stored inside the "redirect" query parameter, which will be persisted until the state matches your main switchRoute. When that happens, you are automatically navigated to that **url**, and the "redirect" query parameter is deleted.
 
-> **NB :** When having two nested `VxRouteSwitcher`s in the route-tree which both have "main redirection" enabled, they should have a different "redirecTo" query parameter name.
+> **NB :** When having multiple `VxRouteSwitcher`s in the route-tree which have "main redirection" enabled, they should each have a different "redirect" query parameter name.
+
+#### The "redirect" query parameter
+
+The "redirect" query parameter is a sticky query parameter, meaning that internally, a `StickyQueryParamsScope` is used to automatically persist it in all the subroutes of the `VxRouteSwitcher`. So you don't need to manually pass it around when navigating.
+
+#### Nested VxRouteSwitcher & Main redirection
+
+Main redirection works as expected when having multiple nested `VxRouteSwitcher`s, as long as you correctly provide the `parentRouteSwitchers` wherever needed.
+
+Note that :
+
+- The "redirect" query parameter of each `VxRouteSwitcher` is only scoped to that `VxRouteSwitcher`, meaning that **it will only be persisted within its VxRouteSwitcher's routes.**
+  - Sometimes, it may find itself outside of its VxRouteSwitcher's routes (for example if it was previously encoded into one of its parents' "redirect" query param, or if the user manually enters it). In that case, it simply won't be persisted during subsequent navigations that occur outside of the VxRouteSwitcher's scope.
+- When making the **url** that will be stored inside the "redirect" query parameter, the `VxRouteSwitcher`'s "redirect" query parameter and its parents' "redirect" query parameter are excluded from that **url** (to avoid infinite loops). However, its children's "redirect" query parameter are not excluded.
+
+## StickyQueryParamsScope
+
+This is a route element (a VGuard) that persists a set of query parameters in all its subroutes. These query parameters are called "Sticky query parameters".
+
+When navigating inside the scope of `StickyQueryParamsScope`, if you omit a sticky query parameter, it will be automatically re-added. If you want to remove the sticky query parameter from the url, you should set its value to the specified `deleteFlag`.
+
+### Usage
+
+```dart
+StickyQueryParamsScope(
+  stickyConfigs: [
+    StickyConfig.exact(name: 'book-id', deleteFlag: '.'),
+    StickyConfig.prefix(prefix: 'book', deleteFlag: '*'),
+    StickyConfig.suffix(suffix: 'id'),
+    StickyConfig.regExp(regExp: RegExp(r"\d+")),
+  ],
+  stackedRoutes: [
+    ...
+  ],
+);
+```
+
+In this example, the sticky query parameters that will be persisted are :
+
+- The query parameter named 'book-id'. It can be removed from the url by setting its value to `.`.
+- All the query parameters which name starts with 'book'. Each one can be removed from the url by setting its value to `*`.
+- All the query parameters which name ends with 'id'. Each one can be removed from the url by setting its value to `_`, which is the default `deleteFlag`.
+- All the query parameters which name consists of digits only. Each one can be removed from the url by setting its value to `_`, which is the default `deleteFlag`.
+
+> **NB1 :** When the same query parameter is matched by multiple `StickyConfig`s, if its value equals at least one of their deleteFlags, it will be deleted from the url.
+> **NB2 :** The delete flag can be set to any value, since it will be percent-encoded. However, keep in mind that the query parameters names should only use alphanumeric characters and [unreserved characters.](https://developers.google.com/maps/url-encoding#special-characters)
+
+### Limitations
+
+In beforeEnter/Update, when we navigate using the vRedirector, the new vRedirector gets the same old `previousVRouterData`. So if you add a sticky query parameter in the middle of the beforeEnter/Update rederections chain, it will not be automatically persisted because the persistence relies on the queryParam to be present in the `previousVRouterData`.
+
+For this reason, if you add new sticky queryParameters using a vRedirector navigation, and you might have other subsequent vRedirector navigations you might do, make sure to **manually** persist the added sticky queryParams until the final page is **reached and accessed**.
 
 ---
 
