@@ -1,6 +1,5 @@
 import 'package:example/example3/switcher1/switcher1_routes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:vrouter/vrouter.dart';
@@ -10,7 +9,7 @@ part 'main.freezed.dart';
 
 /// .
 /// └── Switcher 1
-///     ├── (A*) : Switcher 2
+///     ├── (A) : Switcher 2
 ///     │   ├── (A1) : Switcher 4
 ///     │   │   ├── (D1*)
 ///     │   │   ├── (D2)
@@ -18,7 +17,7 @@ part 'main.freezed.dart';
 ///     │   ├── (A2*)
 ///     │   └── (A3)
 ///     ├── (B)
-///     └── (C) : Switcher 3
+///     └── (C*) : Switcher 3
 ///         ├── (C1*)
 ///         ├── (C2)
 ///         └── (C3)
@@ -92,7 +91,6 @@ class MyScaffold extends ConsumerWidget {
                 FAB(
                   provider: state1Provider,
                   title: 'A',
-                  isMainSwitchRoute: true,
                   stateOnPress: const State1.A(),
                 ),
                 const SizedBox(height: 10),
@@ -177,6 +175,7 @@ class MyScaffold extends ConsumerWidget {
                 FAB(
                   provider: state1Provider,
                   title: 'C',
+                  isMainSwitchRoute: true,
                   stateOnPress: const State1.C(),
                 ),
                 const SizedBox(height: 10),
@@ -319,8 +318,8 @@ class MainRoute extends VxSimpleRoute {
             pathParameters: {'id': 'initial'},
           ),
         ),
-        mainSwitchRouteName: ARoute.routeInfo.name,
-        redirectToQueryParam: 'redirect-1',
+        mainSwitchRouteName: CRoute.routeInfo.name,
+        redirectQueryParamName: 'redirect-1',
       ),
     ];
   }

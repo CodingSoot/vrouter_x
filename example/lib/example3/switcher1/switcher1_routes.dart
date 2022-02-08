@@ -55,11 +55,11 @@ class ARoute extends VxSwitchRoute<ARouteData> {
           ),
         ),
         mainSwitchRouteName: A1Route.routeInfo.name,
-        redirectToQueryParam: 'redirect-2',
+        redirectQueryParamName: 'redirect-2',
         parentRouteSwitchers: [
           ParentRouteSwitcher<State1>(
             provider: state1Provider,
-            redirectToQueryParam: 'redirect-1',
+            redirectQueryParamName: 'redirect-1',
             isStateMatchingChild: (state) =>
                 state.whenOrNull(
                   A: () => true,
@@ -146,11 +146,11 @@ class CRoute extends VxSwitchRoute<CRouteData> {
                 ),
               ),
           mainSwitchRouteName: C1Route.routeInfo.name,
-          redirectToQueryParam: 'redirect-3',
+          redirectQueryParamName: 'redirect-3',
           parentRouteSwitchers: [
             ParentRouteSwitcher<State1>(
               provider: state1Provider,
-              redirectToQueryParam: 'redirect-1',
+              redirectQueryParamName: 'redirect-1',
               isStateMatchingChild: (state) =>
                   state.whenOrNull(
                     C: () => true,
