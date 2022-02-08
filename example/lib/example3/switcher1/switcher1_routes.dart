@@ -1,12 +1,12 @@
 import 'package:example/example3/main.dart';
-import 'package:example/example3/routes2.dart';
-import 'package:example/example3/routes3.dart';
-import 'package:flutter/material.dart';
+import 'package:example/example3/switcher2/switcher2_routes.dart';
+import 'package:example/example3/switcher3/switcher3_routes.dart';
+import 'package:example/example3/switcher4/switcher4_routes.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:vrouter_x/vrouter_x.dart';
 import 'package:vrouter/vrouter.dart';
 
-part 'routes1.freezed.dart';
+part 'switcher1_routes.freezed.dart';
 
 @freezed
 class ARouteData extends RouteData with _$ARouteData {
@@ -21,7 +21,7 @@ class ARoute extends VxSwitchRoute<ARouteData> {
         );
 
   static final routeInfo = SwitchRouteInfo<ARouteData>(
-    path: '/a1/initial',
+    path: D1Route.routeInfo.path,
     name: 'A',
   );
 
@@ -55,10 +55,11 @@ class ARoute extends VxSwitchRoute<ARouteData> {
           ),
         ),
         mainSwitchRouteName: A1Route.routeInfo.name,
-        redirectToQueryParam: '_redirect-2',
+        redirectToQueryParam: 'redirect-2',
         parentRouteSwitchers: [
           ParentRouteSwitcher<State1>(
             provider: state1Provider,
+            redirectToQueryParam: 'redirect-1',
             isStateMatchingChild: (state) =>
                 state.whenOrNull(
                   A: () => true,
@@ -84,7 +85,7 @@ class BRoute extends VxSwitchRoute<BRouteData> {
         );
 
   static final routeInfo = SwitchRouteInfo<BRouteData>(
-    path: '/b',
+    path: '/b/:id',
     name: 'B',
   );
 
@@ -112,7 +113,7 @@ class CRoute extends VxSwitchRoute<CRouteData> {
         );
 
   static final routeInfo = SwitchRouteInfo<CRouteData>(
-    path: '/c1/initial',
+    path: C1Route.routeInfo.path,
     name: 'C',
   );
 
@@ -145,10 +146,11 @@ class CRoute extends VxSwitchRoute<CRouteData> {
                 ),
               ),
           mainSwitchRouteName: C1Route.routeInfo.name,
-          redirectToQueryParam: '_redirect-3',
+          redirectToQueryParam: 'redirect-3',
           parentRouteSwitchers: [
             ParentRouteSwitcher<State1>(
               provider: state1Provider,
+              redirectToQueryParam: 'redirect-1',
               isStateMatchingChild: (state) =>
                   state.whenOrNull(
                     C: () => true,
