@@ -93,101 +93,6 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
 
   static Future<void> _voidAfter() async {}
 
-  /// We persist all the sticky query params, except those flagged for deletion
-  /// (which will be deleted afterEnter/Update).
-  ///
-  /// For optimization, this is not executed if the [VxRouteSwitcher] is nested,
-  /// so that this code only gets executed by the top-most [VxRouteSwitcher]'s
-  /// switchRoute's afterEnterAndUpdate.
-  ///
-  /// > NB : In beforeEnter/Update, when we redirect to a url, the new
-  /// > vRedirector gets the same old vRouterData. However, this doesn't cause
-  /// > any problem for persisting the the sticky queryParams.
-  Future<void> _beforeEnterAndUpdate(VRedirector vRedirector) async {
-    if (isVxRouteSwitcherNested) {
-      return;
-    }
-
-    final previousVRouterData = vRedirector.previousVRouterData;
-    final newVRouterData = vRedirector.newVRouterData!;
-
-    final previousStickyQueryParams = previousVRouterData != null
-        ? StickyQueryParam.getStickyQueryParams(
-            previousVRouterData.queryParameters)
-        : null;
-
-    final newStickyQueryParams =
-        StickyQueryParam.getStickyQueryParams(newVRouterData.queryParameters);
-
-    final queryParamsToPersist = previousStickyQueryParams != null
-        ? previousStickyQueryParams.filterWithKey((key, value) =>
-            value != StickyQueryParam.deleteFlag &&
-            !newStickyQueryParams.containsKey(key))
-        : {};
-
-    if (queryParamsToPersist.isEmpty) {
-      return;
-    }
-
-    final newUri = Uri.parse(newVRouterData.url!);
-
-    final updatedUri = newUri.replace(
-      queryParameters: {
-        ...newUri.queryParameters,
-        ...queryParamsToPersist,
-      },
-    );
-    logger.i('''
-      Persisting the queryParams "$queryParamsToPersist" in switchRoute "${routeInfoInstance.name}"
-      Updated url : ${updatedUri.toString()}
-      ''');
-    vRedirector.to(updatedUri.toString());
-  }
-
-  /// Deleting the sticky query params that are flagged for deletion (= which
-  /// value equals [StickyQueryParam.deleteFlag]).
-  ///
-  /// For optimization, this is not executed if the [VxRouteSwitcher] is nested,
-  /// so that this code only gets executed by the top-most [VxRouteSwitcher]'s
-  /// switchRoute's afterEnterAndUpdate.
-  ///
-  /// > NB : In beforeEnter/Update, when we redirect to a url, the new
-  /// > vRedirector gets the same old vRouterData. For this reason, we can't
-  /// > delete the flagged sticky query params in beforeEnter/Update. Instead,
-  /// > we do this afterEnter/Update.
-  Future<void> _afterEnterAndUpdate(
-      BuildContext context, String? from, String to) async {
-    if (isVxRouteSwitcherNested) {
-      return;
-    }
-
-    final newUri = Uri.parse(to);
-
-    final newStickyQueryParams =
-        StickyQueryParam.getStickyQueryParams(newUri.queryParameters);
-
-    final queryParamsToDelete = newStickyQueryParams
-        .filter((value) => value == StickyQueryParam.deleteFlag);
-
-    if (queryParamsToDelete.isEmpty) {
-      return;
-    }
-
-    /// We remove the queryParamsToDelete
-    final updatedQueryParams = newUri.queryParameters
-        .filterWithKey((key, value) => !queryParamsToDelete.containsKey(key));
-
-    final updatedUri = newUri.replace(
-      queryParameters: updatedQueryParams,
-    );
-
-    logger.i('''
-      Deleting the queryParams "$queryParamsToDelete" in switchRoute "${routeInfoInstance.name}"
-      Updated url : ${updatedUri.toString()}
-      ''');
-    context.vRouter.to(updatedUri.toString());
-  }
-
   @override
   List<VRouteElement> buildRoutes() {
     return [
@@ -223,44 +128,37 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
       /// us to simplify the code in VxRouteSwitcher in such a way that we won't
       /// care about persisting the sticky query params in all the places, it
       /// will be done for us.
-      VGuard(
-        beforeEnter: _beforeEnterAndUpdate,
-        beforeUpdate: _beforeEnterAndUpdate,
-        afterEnter: _afterEnterAndUpdate,
-        afterUpdate: _afterEnterAndUpdate,
-        stackedRoutes: [
-          VNester.builder(
-            path: routeInfoInstance.path,
-            name: routeInfoInstance.name,
-            key: ValueKey(routeInfoInstance.name),
-            widgetBuilder: (context, vRouterData, child) => Consumer(
-              builder: (context, ref, _) {
-                ref.watch(routeInfoInstance._widgetDisposedProvider);
 
-                final routeDataOption =
-                    ref.watch(routeInfoInstance._routeDataOptionProvider);
+      VNester.builder(
+        path: routeInfoInstance.path,
+        name: routeInfoInstance.name,
+        key: ValueKey(routeInfoInstance.name),
+        widgetBuilder: (context, vRouterData, child) => Consumer(
+          builder: (context, ref, _) {
+            ref.watch(routeInfoInstance._widgetDisposedProvider);
 
-                return routeDataOption.match(
-                  (routeData) => ProviderScope(
-                    overrides: [
-                      routeInfoInstance.routeDataProvider
-                          .overrideWithValue(routeData),
-                    ],
-                    child: widgetBuilder(context, vRouterData, child),
-                  ),
-                  () {
-                    throw UnreachableError(customMessage: '''
+            final routeDataOption =
+                ref.watch(routeInfoInstance._routeDataOptionProvider);
+
+            return routeDataOption.match(
+              (routeData) => ProviderScope(
+                overrides: [
+                  routeInfoInstance.routeDataProvider
+                      .overrideWithValue(routeData),
+                ],
+                child: widgetBuilder(context, vRouterData, child),
+              ),
+              () {
+                throw UnreachableError(customMessage: '''
                     The route has been accessed while its routeData is none().
                     This should have been prevented by VxRouteSwitcher's VGuard.
                     ''');
-                  },
-                );
               },
-            ),
-            nestedRoutes: buildRoutesX(),
-          ),
-        ],
-      )
+            );
+          },
+        ),
+        nestedRoutes: buildRoutesX(),
+      ),
     ];
   }
 

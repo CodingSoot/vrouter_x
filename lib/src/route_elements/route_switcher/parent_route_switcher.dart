@@ -8,13 +8,19 @@ import 'package:vrouter_x/src/route_elements/route_elements.dart';
 class ParentRouteSwitcher<T> {
   ParentRouteSwitcher({
     required this.provider,
+    required this.redirectToQueryParam,
     required bool Function(T state) isStateMatchingChild,
   }) : _isStateMatchingChild = isStateMatchingChild;
 
   final bool Function(T state) _isStateMatchingChild;
 
-  /// The provider of the parent [VxRouteSwitcher].
+  /// The parent's [VxRouteSwitcher.provider].
   final ProviderBase<T> provider;
+
+  /// The parent's [VxRouteSwitcher.redirectToQueryParam].
+  ///
+  /// Null if the parent's "main redirection" is disabled.
+  final String? redirectToQueryParam;
 
   /// Whether the state of the parent [VxRouteSwitcher] is matching the route
   /// containing the child [VxRouteSwitcher].
