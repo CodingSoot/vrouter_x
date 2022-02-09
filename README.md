@@ -15,8 +15,6 @@ and the Flutter guide for
 
 > ⚠️ This package is still in development.
 
-This is a set of helpers for when using vRouter.
-
 - [Intro](#intro)
 - [Features](#features)
   - [_Widgets-like route elements :_](#widgets-like-route-elements-)
