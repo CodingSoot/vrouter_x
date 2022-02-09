@@ -59,30 +59,6 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
           BuildContext context, VRouterData vRouterData, Widget child)
       widgetBuilder;
 
-  /// Whether the "main redirection" is enabled in the parent [VxRouteSwitcher].
-  ///
-  /// ⚠️ When this is true, both [isMainSwitchRoute] and [_redirectToQueryParam]
-  /// are not null. Otherwise, both are null.
-  ///
-  /// NB: This will be initialized by the parent [VxRouteSwitcher].
-  late final bool isMainRedirectionEnabled;
-
-  /// Whether this switchRoute is the mainSwitchRoute. True if this
-  /// switchRoute's name equals the parent's
-  /// [VxRouteSwitcher.mainSwitchRouteName].
-  ///
-  /// Non null if [isMainRedirectionEnabled] is true (and null otherwise).
-  ///
-  /// NB: This will be initialized by the parent [VxRouteSwitcher].
-  late final bool? isMainSwitchRoute;
-
-  /// Equals the parent's [VxRouteSwitcher.redirectToQueryParam].
-  ///
-  /// Non null if [isMainRedirectionEnabled] is true (and null otherwise).
-  ///
-  /// NB: This will be initialized by the parent [VxRouteSwitcher].
-  late final String? _redirectToQueryParam;
-
   /// Called after switching to this route.
   ///
   /// Defaults to [VxSwitchRoute._voidAfter].
@@ -95,91 +71,39 @@ abstract class VxSwitchRoute<P extends RouteData> extends VxRouteBase {
 
   static Future<void> _voidAfter() async {}
 
-  /// When the "main redirection" is enabled, this will persist the "redirectTo"
-  /// query parameter when navigating between the routes of this [VxSwitchRoute]
-  Future<void> _beforeUpdate(VRedirector vRedirector) async {
-    /// The "main redirection" isn't enabled.
-    if (!isMainRedirectionEnabled) {
-      return;
-    }
-
-    /// [isMainRedirectionEnabled] is true, so both [isMainSwitchRoute]
-    /// and [redirectToQueryParam] are not null.
-    final isMainSwitchRoute = this.isMainSwitchRoute!;
-    final redirectToQueryParam = _redirectToQueryParam!;
-
-    /// If this [VxSwitchRoute] is the main switchRoute, we obviously don't want
-    /// to persist the "redirectTo" query parameter. (would cause an infinite
-    /// redirection loop)
-    if (isMainSwitchRoute) {
-      return;
-    }
-
-    final previousRedirectToQueryParam =
-        vRedirector.previousVRouterData?.queryParameters[redirectToQueryParam];
-
-    final newVRouterData = vRedirector.newVRouterData!;
-    final newRedirectToQueryParam =
-        newVRouterData.queryParameters[redirectToQueryParam];
-
-    /// If the new url doesn't contain the "redirectTo" query parameter, while
-    /// the previous url does, we add it to the query parameters of the new url
-    /// and we redirect there.
-    if (newRedirectToQueryParam == null &&
-        previousRedirectToQueryParam != null) {
-      final uri = Uri.parse(newVRouterData.url!);
-      final updatedUri = uri.replace(
-        queryParameters: {
-          ...uri.queryParameters,
-          redirectToQueryParam: previousRedirectToQueryParam,
-        },
-      );
-      logger.i('''
-      Persisting the redirectToQueryParam "$redirectToQueryParam" in switchRoute "${routeInfoInstance.name}"
-      Updated url : ${updatedUri.toString()}
-      ''');
-      vRedirector.to(updatedUri.toString());
-    }
-  }
-
   @override
   List<VRouteElement> buildRoutes() {
     return [
-      VGuard(
-        beforeUpdate: _beforeUpdate,
-        stackedRoutes: [
-          VNester.builder(
-            path: routeInfoInstance.path,
-            name: routeInfoInstance.name,
-            key: ValueKey(routeInfoInstance.name),
-            widgetBuilder: (context, vRouterData, child) => Consumer(
-              builder: (context, ref, _) {
-                ref.watch(routeInfoInstance._widgetDisposedProvider);
+      VNester.builder(
+        path: routeInfoInstance.path,
+        name: routeInfoInstance.name,
+        key: ValueKey(routeInfoInstance.name),
+        widgetBuilder: (context, vRouterData, child) => Consumer(
+          builder: (context, ref, _) {
+            ref.watch(routeInfoInstance._widgetDisposedProvider);
 
-                final routeDataOption =
-                    ref.watch(routeInfoInstance._routeDataOptionProvider);
+            final routeDataOption =
+                ref.watch(routeInfoInstance._routeDataOptionProvider);
 
-                return routeDataOption.match(
-                  (routeData) => ProviderScope(
-                    overrides: [
-                      routeInfoInstance.routeDataProvider
-                          .overrideWithValue(routeData),
-                    ],
-                    child: widgetBuilder(context, vRouterData, child),
-                  ),
-                  () {
-                    throw UnreachableError(customMessage: '''
+            return routeDataOption.match(
+              (routeData) => ProviderScope(
+                overrides: [
+                  routeInfoInstance.routeDataProvider
+                      .overrideWithValue(routeData),
+                ],
+                child: widgetBuilder(context, vRouterData, child),
+              ),
+              () {
+                throw UnreachableError(customMessage: '''
                     The route has been accessed while its routeData is none().
                     This should have been prevented by VxRouteSwitcher's VGuard.
                     ''');
-                  },
-                );
               },
-            ),
-            nestedRoutes: buildRoutesX(),
-          ),
-        ],
-      )
+            );
+          },
+        ),
+        nestedRoutes: buildRoutesX(),
+      ),
     ];
   }
 

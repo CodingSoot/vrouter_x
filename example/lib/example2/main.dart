@@ -130,7 +130,7 @@ class MyApp extends ConsumerWidget {
             ProfileRoute(routeRef),
             PurpleRoute(routeRef),
           ],
-          redirectToQueryParam: 'redirect-to',
+          redirectQueryParamName: 'redirect-to',
           mainSwitchRouteName: MainRoute.routeInfo.name,
           provider: myStateProvider,
           mapStateToSwitchRoute: (state, previousVRouterData) {

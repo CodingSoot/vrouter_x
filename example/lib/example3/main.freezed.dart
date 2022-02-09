@@ -1234,3 +1234,410 @@ class _$_C3 implements _C3 {
 abstract class _C3 implements State3 {
   const factory _C3() = _$_C3;
 }
+
+/// @nodoc
+class _$State4TearOff {
+  const _$State4TearOff();
+
+  _D1 D1() {
+    return const _D1();
+  }
+
+  _D2 D2() {
+    return const _D2();
+  }
+
+  _D3 D3() {
+    return const _D3();
+  }
+}
+
+/// @nodoc
+const $State4 = _$State4TearOff();
+
+/// @nodoc
+mixin _$State4 {
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() D1,
+    required TResult Function() D2,
+    required TResult Function() D3,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function()? D1,
+    TResult Function()? D2,
+    TResult Function()? D3,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? D1,
+    TResult Function()? D2,
+    TResult Function()? D3,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_D1 value) D1,
+    required TResult Function(_D2 value) D2,
+    required TResult Function(_D3 value) D3,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_D1 value)? D1,
+    TResult Function(_D2 value)? D2,
+    TResult Function(_D3 value)? D3,
+  }) =>
+      throw _privateConstructorUsedError;
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_D1 value)? D1,
+    TResult Function(_D2 value)? D2,
+    TResult Function(_D3 value)? D3,
+    required TResult orElse(),
+  }) =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $State4CopyWith<$Res> {
+  factory $State4CopyWith(State4 value, $Res Function(State4) then) =
+      _$State4CopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class _$State4CopyWithImpl<$Res> implements $State4CopyWith<$Res> {
+  _$State4CopyWithImpl(this._value, this._then);
+
+  final State4 _value;
+  // ignore: unused_field
+  final $Res Function(State4) _then;
+}
+
+/// @nodoc
+abstract class _$D1CopyWith<$Res> {
+  factory _$D1CopyWith(_D1 value, $Res Function(_D1) then) =
+      __$D1CopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$D1CopyWithImpl<$Res> extends _$State4CopyWithImpl<$Res>
+    implements _$D1CopyWith<$Res> {
+  __$D1CopyWithImpl(_D1 _value, $Res Function(_D1) _then)
+      : super(_value, (v) => _then(v as _D1));
+
+  @override
+  _D1 get _value => super._value as _D1;
+}
+
+/// @nodoc
+
+class _$_D1 implements _D1 {
+  const _$_D1();
+
+  @override
+  String toString() {
+    return 'State4.D1()';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _D1);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() D1,
+    required TResult Function() D2,
+    required TResult Function() D3,
+  }) {
+    return D1();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function()? D1,
+    TResult Function()? D2,
+    TResult Function()? D3,
+  }) {
+    return D1?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? D1,
+    TResult Function()? D2,
+    TResult Function()? D3,
+    required TResult orElse(),
+  }) {
+    if (D1 != null) {
+      return D1();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_D1 value) D1,
+    required TResult Function(_D2 value) D2,
+    required TResult Function(_D3 value) D3,
+  }) {
+    return D1(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_D1 value)? D1,
+    TResult Function(_D2 value)? D2,
+    TResult Function(_D3 value)? D3,
+  }) {
+    return D1?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_D1 value)? D1,
+    TResult Function(_D2 value)? D2,
+    TResult Function(_D3 value)? D3,
+    required TResult orElse(),
+  }) {
+    if (D1 != null) {
+      return D1(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class _D1 implements State4 {
+  const factory _D1() = _$_D1;
+}
+
+/// @nodoc
+abstract class _$D2CopyWith<$Res> {
+  factory _$D2CopyWith(_D2 value, $Res Function(_D2) then) =
+      __$D2CopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$D2CopyWithImpl<$Res> extends _$State4CopyWithImpl<$Res>
+    implements _$D2CopyWith<$Res> {
+  __$D2CopyWithImpl(_D2 _value, $Res Function(_D2) _then)
+      : super(_value, (v) => _then(v as _D2));
+
+  @override
+  _D2 get _value => super._value as _D2;
+}
+
+/// @nodoc
+
+class _$_D2 implements _D2 {
+  const _$_D2();
+
+  @override
+  String toString() {
+    return 'State4.D2()';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _D2);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() D1,
+    required TResult Function() D2,
+    required TResult Function() D3,
+  }) {
+    return D2();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function()? D1,
+    TResult Function()? D2,
+    TResult Function()? D3,
+  }) {
+    return D2?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? D1,
+    TResult Function()? D2,
+    TResult Function()? D3,
+    required TResult orElse(),
+  }) {
+    if (D2 != null) {
+      return D2();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_D1 value) D1,
+    required TResult Function(_D2 value) D2,
+    required TResult Function(_D3 value) D3,
+  }) {
+    return D2(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_D1 value)? D1,
+    TResult Function(_D2 value)? D2,
+    TResult Function(_D3 value)? D3,
+  }) {
+    return D2?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_D1 value)? D1,
+    TResult Function(_D2 value)? D2,
+    TResult Function(_D3 value)? D3,
+    required TResult orElse(),
+  }) {
+    if (D2 != null) {
+      return D2(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class _D2 implements State4 {
+  const factory _D2() = _$_D2;
+}
+
+/// @nodoc
+abstract class _$D3CopyWith<$Res> {
+  factory _$D3CopyWith(_D3 value, $Res Function(_D3) then) =
+      __$D3CopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$D3CopyWithImpl<$Res> extends _$State4CopyWithImpl<$Res>
+    implements _$D3CopyWith<$Res> {
+  __$D3CopyWithImpl(_D3 _value, $Res Function(_D3) _then)
+      : super(_value, (v) => _then(v as _D3));
+
+  @override
+  _D3 get _value => super._value as _D3;
+}
+
+/// @nodoc
+
+class _$_D3 implements _D3 {
+  const _$_D3();
+
+  @override
+  String toString() {
+    return 'State4.D3()';
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _D3);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function() D1,
+    required TResult Function() D2,
+    required TResult Function() D3,
+  }) {
+    return D3();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult Function()? D1,
+    TResult Function()? D2,
+    TResult Function()? D3,
+  }) {
+    return D3?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function()? D1,
+    TResult Function()? D2,
+    TResult Function()? D3,
+    required TResult orElse(),
+  }) {
+    if (D3 != null) {
+      return D3();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(_D1 value) D1,
+    required TResult Function(_D2 value) D2,
+    required TResult Function(_D3 value) D3,
+  }) {
+    return D3(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult Function(_D1 value)? D1,
+    TResult Function(_D2 value)? D2,
+    TResult Function(_D3 value)? D3,
+  }) {
+    return D3?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(_D1 value)? D1,
+    TResult Function(_D2 value)? D2,
+    TResult Function(_D3 value)? D3,
+    required TResult orElse(),
+  }) {
+    if (D3 != null) {
+      return D3(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class _D3 implements State4 {
+  const factory _D3() = _$_D3;
+}
