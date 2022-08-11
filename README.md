@@ -554,7 +554,7 @@ VGuard : after Entering the switching screen, we wait a little before redirectin
 
 The advantages are that :
 
-- The transitions are working proprely right off the bat.
+- The transitions are working properly right off the bat.
 - Even if the redirection is asynchroneous, there is no concurrency issues to fear. So if for example the state changes before the redirection happens, then the VxRouteSwitcher will switch to the new switchRoute, and when the redirection is finally executed it will be stopped.
 
 # VsCode snippets
